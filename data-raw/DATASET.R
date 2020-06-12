@@ -91,7 +91,7 @@ Years <- unique(unique(format(as.Date(Chem2246$Datum),"%Y"))) ##Chem2246 l?ngest
 
 
 
-############### Berechnung von Mittelwerten pro See, Parameter, zT Jahr ###############
+############### Berechnung von Mittelwerten pro See, Parameter, Jahr ###############
 #######################################################################################
 
 ##MEAN for each year, lake and attribute!!
@@ -108,7 +108,7 @@ for (j in chem.names){
       myvec <- select(myvec, 1, i)
       myvec[[1]]<- format(as.Date(myvec[[1]]), "%Y")
       #Chem.Mean.Year[j,k,i] <- mean(myvec[myvec$Datum==k, i], na.rm = T)
-      Chem.Mean.Year[j,k,i] <- ifelse(length(myvec[myvec$Datum==k, i])>=8,
+      Chem.Mean.Year[j,k,i] <- ifelse(length(myvec[myvec$Datum==k, i])>=8, #CONDITION: 8 monthly values have to be available for builing a mean
                                       mean(myvec[myvec$Datum==k, i], na.rm = T), NA)
     }
   }
@@ -135,7 +135,7 @@ usethis::use_data(Chem.Mean.YearDF, overwrite = TRUE)
 setwd("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/2_DDGasPackage/MacrophytesDDG")
 
 ## Load data
-Makroph <- read.csv("./rawdata/Makrophyten_WRRL_05-17_nurMakrophytes.csv", header=TRUE, sep=";") #%>%
+Makroph <- read.csv("./rawdata/Makrophyten_WRRL_05-17_nurMakrophytes.csv", header=TRUE, sep=";")
 
 #Filter for unplausible datasets
 Makroph <- Makroph %>%

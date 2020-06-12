@@ -197,6 +197,7 @@ PEAK_Chem<-inner_join(Chem_uniform_LOI, PEAK, by.y=c("Lake", "YEAR"),by.x=c("Nam
 usethis::use_data(MakrophS_ALL, overwrite = TRUE)
 usethis::use_data(Makroph_Lake_DepthS, overwrite = TRUE)
 usethis::use_data(Makroph_Depth, overwrite = TRUE)
+usethis::use_data(Makroph_Lake_ALL, overwrite = TRUE)
 
 usethis::use_data(PEAK_LAKE_ALL, overwrite = TRUE)
 usethis::use_data(PEAK, overwrite = TRUE)

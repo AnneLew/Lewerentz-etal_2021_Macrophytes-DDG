@@ -1,6 +1,6 @@
 ---
-title: "analysis"
-author: "Anne Lewerentz"
+title: "DDG Analysis | Main results"
+author: "Anne Lewerentz, Juliano Cabral"
 date: "12 Juni 2020"
 output: html_document
 ---
@@ -21,22 +21,24 @@ library(ggpubr)
 
 ## Data overview
 
-
+Complete dataset:
 ```{r, echo=FALSE}
 MakrophS_ALL %>% summarise(NLake = n_distinct(Lake),NTrans = n_distinct(MST_NR),NDepth = n_distinct(Probestelle),NYEAR = n_distinct(YEAR))
-
+```
+Level 3 dataset
+```{r, echo=FALSE}
 MakrophS_ALL %>% filter(datasettot=="LEVEL3") %>% group_by(datasettot) %>% summarise(NLake = n_distinct(Lake),N = n_distinct(Lake,YEAR),
                                                                                      NTrans = n_distinct(MST_NR),NDepth = n_distinct(Probestelle),NYEAR = n_distinct(YEAR))
+```
 
+LEVEL 2 & LEVEL3 Dataset
+```{r, echo=FALSE}
 MakrophS_ALL %>% filter(datasettot=="LEVEL3"|datasettot=="LEVEL2") %>% summarise(NLake = n_distinct(Lake),N = n_distinct(Lake,YEAR),
                                                                                  NTrans = n_distinct(MST_NR),NDepth = n_distinct(Probestelle),NYEAR = n_distinct(YEAR))
-
-
 ```
 
 
-
-## Depth diversity gradients : All datasets together
+## Depth diversity gradients : Full datasets
 
 
 ```{r, echo=FALSE}
@@ -71,10 +73,51 @@ PEAK_LAKE_ALL$DepthGroup<-if_else(PEAK_LAKE_ALL$AlphaPeakDepth>-1,"1",
 PEAKCLASS1<-PEAK_LAKE_ALL %>% group_by(DepthGroup) %>% summarise(n_distinct(interaction(Lake,YEAR)))
 
 PEAKCLASS1
-Peak_Gamma %>% group_by(GammaPeakDepth) %>% summarise(n_distinct(interaction(Lake,YEAR)))
+PEAK  %>% group_by(GammaPeakDepth) %>% summarise(n_distinct(interaction(Lake,YEAR)))
 
-Peak_Beta %>% group_by(BetaPeakDepth) %>% summarise(n_distinct(interaction(Lake,YEAR)))
+PEAK %>% group_by(BetaPeakDepth) %>% summarise(n_distinct(interaction(Lake,YEAR)))
 
 chisq.test(PEAKCLASS1$`n_distinct(interaction(Lake, YEAR))`)
+```
+
+```{r}
+### ALPHA & Peak Plot
+ggplot(data=Makroph_Lake_DepthS, aes(x=(Tiefe), y=ALPHA, col=factor(YEAR), group=interaction(Lake,YEAR)))+ 
+  geom_line(aes(linetype=datasettot))+#interaction(dataset,datasetWLF)
+  facet_wrap(~ Lake, ncol=7)+
+  ylab("Alpha richness")+ xlab("")+labs(fill = "Pattern type")+ylim(0,15)+
+  geom_errorbar(data=Makroph_Lake_DepthS,aes(ymin=ALPHA-ALPHAsd, ymax=ALPHA+ALPHAsd), width=.1)+
+  geom_point(data=PEAK_LAKE_ALL, aes(x=(AlphaPeakDepth), y=AlphaPeakRichness, shape=datasettot))+ scale_x_reverse()
+### BETA & Peak Plot
+ggplot(Makroph_Lake_DepthS, aes(x=Tiefe, y=BETA, group=interaction(Lake,YEAR), col=factor(YEAR), linetype=datasettot))+ 
+  geom_line()+facet_wrap(~ Lake, ncol=10)+
+  ylab("Beta richness")+ xlab("Depth (m)")+labs(fill = "Pattern type")+
+  geom_point(data=PEAK, aes(x=BetaPeakDepth, y=BetaPeakRichness, shape=datasettot))+ scale_x_reverse()
+### GAMMA & Peak Plot
+ggplot(Makroph_Lake_DepthS, aes(x=Tiefe, y=GAMMA, group=interaction(Lake,YEAR), col=factor(YEAR), linetype=datasettot))+ 
+  geom_line()+facet_wrap(~ Lake, ncol=10)+
+  ylab("Gamma richness")+ xlab("Depth (m)")+labs(fill = "Pattern type")+
+  geom_point(data=PEAK, aes(x=GammaPeakDepth, y=GammaPeakRichness, shape=datasettot))+ scale_x_reverse()
+
+```
+
+
+
+
+```{r, echo=FALSE}
+## PEAK Plot
+PPalpha<-ggplot(PEAK_LAKE_ALL, aes(y=AlphaPeakRichness, x=AlphaPeakDepth, col=datasettot))+
+  geom_point()+# labs(col = "Pattern type")+
+  #geom_text(aes(label=paste(Gew?sser,YEAR)),hjust=0, vjust=0)+
+  xlab("AlphaPeak Depth (m)")+ylab("AlphaPeak richness (N)")+
+  theme(legend.position = c(0.9, 0.2))+ scale_x_reverse()
+
+PPbeta<-ggplot(PEAK, aes(x=BetaPeakDepth, y=BetaPeakRichness, col=datasettot))+geom_point()+ scale_x_reverse()+
+  xlab("BetaPeak Depth (m)")+ylab("BetaPeak richness (N)")
+
+PPgamma<-ggplot(PEAK, aes(x=GammaPeakDepth, y=GammaPeakRichness, col=datasettot))+geom_point()+ scale_x_reverse()+
+  xlab("GammaPeak Depth (m)")+ylab("GammaPeak richness (N)")
+
+ggarrange(PPalpha,PPbeta,PPgamma, ncol=3,common.legend = T, legend="bottom", labels="auto")
 ```
 

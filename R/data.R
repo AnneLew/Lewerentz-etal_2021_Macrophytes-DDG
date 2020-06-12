@@ -1,15 +1,17 @@
-#' Prices of 50,000 round cut diamonds.
+#' Physical Chemical Data for Bavarian Lakes
 #'
-#' A dataset containing the prices and other attributes of almost 54,000
-#' diamonds.
+#' A dataset containing annual means of physical chemical measurements for Bavarian lakes.
+#' Data were prepaired in "DATASET.R"
 #'
-#' @format A data frame with 53940 rows and 10 variables:
+#' @format A data frame with 53940 rows and 4 variables:
 #' \describe{
-#'   \item{price}{price, in US dollars}
-#'   \item{carat}{weight of the diamond, in carats}
+#'   \item{Var1}{Lake Name}
+#'   \item{Var2}{Year of measurements}
+#'   \item{Var3}{Chemical physical variables}
+#'   \item{value}{values}
 #'   ...
 #' }
-#' @source \url{http://www.diamondse.info/}
+#' @source \url{http://www.lfu.bayern.de/}
 "Chem.Mean.YearDF"
 
 #
