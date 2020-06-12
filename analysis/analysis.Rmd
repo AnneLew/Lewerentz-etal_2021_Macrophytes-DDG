@@ -66,11 +66,11 @@ ggarrange(A1,B1,C1,ncol=3,nrow=1,labels="auto")
 
 ```{r}
 
-PEAK_LAKE_ALL$DepthGroup<-if_else(PEAK_LAKE_ALL$AlphaPeakDepth>-1,"1",
-                                  if_else(PEAK_LAKE_ALL$AlphaPeakDepth>-2,"2",
-                                          if_else(PEAK_LAKE_ALL$AlphaPeakDepth>-4,"3","4")))
+PEAK$DepthGroup<-if_else(PEAK$AlphaPeakDepth>-1,"1",
+                                  if_else(PEAK$AlphaPeakDepth>-2,"2",
+                                          if_else(PEAK$AlphaPeakDepth>-4,"3","4")))
 
-PEAKCLASS1<-PEAK_LAKE_ALL %>% group_by(DepthGroup) %>% summarise(n_distinct(interaction(Lake,YEAR)))
+PEAKCLASS1<-PEAK %>% group_by(DepthGroup) %>% summarise(n_distinct(interaction(Lake,YEAR)))
 
 PEAKCLASS1
 PEAK  %>% group_by(GammaPeakDepth) %>% summarise(n_distinct(interaction(Lake,YEAR)))
@@ -87,7 +87,7 @@ ggplot(data=Makroph_Lake_DepthS, aes(x=(Tiefe), y=ALPHA, col=factor(YEAR), group
   facet_wrap(~ Lake, ncol=7)+
   ylab("Alpha richness")+ xlab("")+labs(fill = "Pattern type")+ylim(0,15)+
   geom_errorbar(data=Makroph_Lake_DepthS,aes(ymin=ALPHA-ALPHAsd, ymax=ALPHA+ALPHAsd), width=.1)+
-  geom_point(data=PEAK_LAKE_ALL, aes(x=(AlphaPeakDepth), y=AlphaPeakRichness, shape=datasettot))+ scale_x_reverse()
+  geom_point(data=PEAK, aes(x=(AlphaPeakDepth), y=AlphaPeakRichness, shape=datasettot))+ scale_x_reverse()
 ### BETA & Peak Plot
 ggplot(Makroph_Lake_DepthS, aes(x=Tiefe, y=BETA, group=interaction(Lake,YEAR), col=factor(YEAR), linetype=datasettot))+ 
   geom_line()+facet_wrap(~ Lake, ncol=10)+
@@ -106,7 +106,7 @@ ggplot(Makroph_Lake_DepthS, aes(x=Tiefe, y=GAMMA, group=interaction(Lake,YEAR), 
 
 ```{r, echo=FALSE}
 ## PEAK Plot
-PPalpha<-ggplot(PEAK_LAKE_ALL, aes(y=AlphaPeakRichness, x=AlphaPeakDepth, col=datasettot))+
+PPalpha<-ggplot(PEAK, aes(y=AlphaPeakRichness, x=AlphaPeakDepth, col=datasettot))+
   geom_point()+# labs(col = "Pattern type")+
   #geom_text(aes(label=paste(Gew?sser,YEAR)),hjust=0, vjust=0)+
   xlab("AlphaPeak Depth (m)")+ylab("AlphaPeak richness (N)")+

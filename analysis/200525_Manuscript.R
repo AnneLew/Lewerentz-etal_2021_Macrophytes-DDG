@@ -1,8 +1,8 @@
 ## Set WD
-setwd("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/3_WFD-Project")
+#setwd("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/3_WFD-Project")
 
 ## ggplot theme updates
-source("02_Themes/tidy_white_anne.R")
+source("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/3_WFD-Project/02_Themes/tidy_white_anne.R")
 
 ## LOAD Packages
 library(ggplot2)
@@ -997,66 +997,3 @@ CHANGE_morph <- merge(CHANGE, Morph, by.x = c("Lake"), by.y = c("Name_Makro_shor
 c3 <- cor(CHANGE_morph[c(4,5,7:18,20,21,22)],use = "complete.obs")
 corrplot(c3, type = "upper", method = "number")
 
-
-# ##Artverschiebung
-# ggplot(Makroph_Lake, aes(x=Lake, y=spnrLAKE, col=factor(YEAR)))+
-#   geom_boxplot()+ theme(axis.text.x = element_text(angle = 90, hjust = 1))
-# 
-# MAK_LAK_CHANGE <- Makroph_Lake %>% select(Lake, YEAR, spnrLAKE) %>%spread(YEAR, spnrLAKE)
-# 
-# Makroph_Lake_PA <- Makroph_Lake
-# Makroph_Lake_PA[, 3:58][Makroph_Lake_PA[, 3:58] > 0] <- 1
-# Makroph_Lake_PA %>% filter(Lake=="Chiemsee") %>% select_if(~ !is.numeric(.) || sum(.) != 0) %>% select_if(~ !is.numeric(.) || sum(.) != 3)
-# Makroph_Lake_PA %>% filter(Lake=="Tegernsee") %>% select_if(~ !is.numeric(.) || sum(.) != 0) %>% select_if(~ !is.numeric(.) || sum(.) != 4)
-# 
-
-
-
-# ## BETAPART package ##
-# library(betapart)
-# library(usedist)
-# library(stringr)
-# 
-# ##BETA div between lakes
-# #Makroph_LakeSEL <- Makroph_Lake %>% ungroup() %>% filter(YEAR == "2010")
-# Makroph_Lake$Alisma.plantago.aquatica
-# BETALAKE <- Makroph_Lake %>% ungroup() %>% #filter(YEAR == "2010") %>%
-#   dplyr::select(Alisma.plantago.aquatica:Zannichellia.palustris) %>%
-#   mutate_if(is.numeric, ~1 * (. > 0))  %>% beta.pair()
-# #DLAKES<-dist_groups(BETALAKE$beta.sor,Makroph_Lake$Lake)%>% group_by(Label)%>%summarise(DIST=mean(Distance))%>%arrange(DIST)
-# 
-# 
-# YEARS <- unique(Makroph_Lake_DepthS$YEAR)
-# #TURNOVER
-# TURNOVERLIST <- data.frame()
-# for (i in 1:length(YEARS)){
-#   Makroph_Lake_DepthFILTER <- Makroph_Lake_DepthS%>% filter(YEAR==YEARS[i])
-#   BETA <- Makroph_Lake_DepthFILTER %>% ungroup() %>%as.data.frame() %>%
-#     dplyr::select(Ceratophyllum.demersum:Zannichellia.palustris) %>%
-#     mutate_if(is.numeric, ~1 * (. > 0))  %>% beta.pair()
-#   Turn <-dist_groups(BETA$beta.sim,Makroph_Lake_DepthFILTER$GROUPSMBD) %>% filter(str_detect(Label, "Within"))%>%
-#     group_by(Group1)%>%summarise(DIST=mean(Distance, na.rm=T))
-#   TURNOVERLIST <- bind_rows(TURNOVERLIST, Turn)
-# }
-# TURNOVERLIST<- TURNOVERLIST %>% group_by(Group1) %>% summarise(DISTMEAN = mean(DIST, na.rm=T))
-# #NESTEDNESS
-# NESTEDNESSLIST <- data.frame()
-# for (i in 1:length(YEARS)){
-#   Makroph_Lake_DepthFILTER <- Makroph_Lake_DepthS%>% filter(YEAR==YEARS[i])
-#   BETA <- Makroph_Lake_DepthFILTER %>% ungroup() %>%as.data.frame() %>%
-#     dplyr::select(Ceratophyllum.demersum:Zannichellia.palustris) %>%
-#     mutate_if(is.numeric, ~1 * (. > 0))  %>% beta.pair()
-#   Nest <-dist_groups(BETA$beta.sne,Makroph_Lake_DepthFILTER$GROUPSMBD) %>% filter(str_detect(Label, "Within"))%>%
-#     group_by(Group1)%>%summarise(DIST=mean(Distance, na.rm=T))
-#   NESTEDNESSLIST <- bind_rows(NESTEDNESSLIST, Nest)
-# }
-# NESTEDNESSLIST<- NESTEDNESSLIST %>% group_by(Group1) %>% summarise(DISTMEAN = mean(DIST, na.rm=T))
-# 
-# TURNNEST <- full_join(TURNOVERLIST, NESTEDNESSLIST, by="Group1")%>%rename(Turnover=DISTMEAN.x, Nestednes=DISTMEAN.y)
-# library(reshape2)
-# dfm <- melt(TURNNEST[,c('Group1','Turnover','Nestednes')],id.vars = 1)
-# 
-# ggplot(data=dfm, aes(x=Group1, y=value))+ylab("Beta diversity")+ ###BETA Div ?ber die Tiefe
-#   geom_bar(aes(fill=variable),stat = "identity",position = "stack")+
-#   theme(axis.text.x = element_text(angle = 90, hjust = 1))+ylim(0,1)
-       

@@ -8,6 +8,9 @@ library(vegan)
 library(stringr)
 #library(corrplot)
 
+## Set WD
+setwd("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/2_DDGasPackage/MacrophytesDDG")
+
 ### Data import
 ## Macrophytes
 MakrophS_raw <- Makroph_comm_S  %>% ungroup() %>% select(-LAKE_TYPE2) %>% rename(Lake=Gewässer)%>%mutate(YEAR=as.factor(YEAR))
@@ -192,12 +195,14 @@ PEAK<-merge(PEAK, Peak_Beta[c(1,2,6,7)], by=c("Lake", "YEAR"))
 Chem_uniform_LOIx <- inner_join(Chem_uniform_LOI, PEAK, by.x=c("Name_Makro_short", "YEAR"), by.y=c("Lake", "YEAR"))[1:30]
 PEAK_Chem<-inner_join(Chem_uniform_LOI, PEAK, by.y=c("Lake", "YEAR"),by.x=c("Name_Makro_short", "YEAR")) #New dataset with chem information of LOI
 
-
+## Set WD
+setwd("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/2_DDGasPackage/MacrophytesDDG")
 ##########################
 usethis::use_data(MakrophS_ALL, overwrite = TRUE)
 usethis::use_data(Makroph_Lake_DepthS, overwrite = TRUE)
 usethis::use_data(Makroph_Depth, overwrite = TRUE)
 usethis::use_data(Makroph_Lake_ALL, overwrite = TRUE)
 
-usethis::use_data(PEAK_LAKE_ALL, overwrite = TRUE)
+#usethis::use_data(PEAK_LAKE_ALL, overwrite = TRUE)
 usethis::use_data(PEAK, overwrite = TRUE)
+usethis::use_data(Chem_uniform_LOIx, overwrite = TRUE)
