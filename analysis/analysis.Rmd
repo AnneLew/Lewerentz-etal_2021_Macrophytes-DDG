@@ -9,22 +9,72 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+```{r load-packages, include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(knitr)
+library(MacrophytesDDG)
+library(ggpubr)
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
 ```
 
-## Including Plots
+## Data overview
 
-You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r, echo=FALSE}
+MakrophS_ALL %>% summarise(NLake = n_distinct(Lake),NTrans = n_distinct(MST_NR),NDepth = n_distinct(Probestelle),NYEAR = n_distinct(YEAR))
+
+MakrophS_ALL %>% filter(datasettot=="LEVEL3") %>% group_by(datasettot) %>% summarise(NLake = n_distinct(Lake),N = n_distinct(Lake,YEAR),
+                                                                                     NTrans = n_distinct(MST_NR),NDepth = n_distinct(Probestelle),NYEAR = n_distinct(YEAR))
+
+MakrophS_ALL %>% filter(datasettot=="LEVEL3"|datasettot=="LEVEL2") %>% summarise(NLake = n_distinct(Lake),N = n_distinct(Lake,YEAR),
+                                                                                 NTrans = n_distinct(MST_NR),NDepth = n_distinct(Probestelle),NYEAR = n_distinct(YEAR))
+
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+## Depth diversity gradients : All datasets together
+
+
+```{r, echo=FALSE}
+A1<-ggplot(data=Makroph_Lake_DepthS)+
+  geom_line(aes(x=Tiefe, y=ALPHA, group=interaction(Lake, YEAR)),col="grey")+ scale_x_reverse()+
+  geom_line(data=Makroph_Depth,aes(x=(Tiefe), y=mAlpha))+ 
+  geom_errorbar(data=Makroph_Depth,aes(x=(Tiefe),ymin=mAlpha-sdAlpha, ymax=mAlpha+sdAlpha), width=.1)+
+  ylab("Alpha richness")+xlab(("Depth (m)"))
+B1<-ggplot(data=Makroph_Lake_DepthS)+
+  geom_line(aes(x=Tiefe, y=BETA, group=interaction(Lake, YEAR)),col="grey")+ scale_x_reverse()+
+  geom_line(data=Makroph_Depth,aes(x=(Tiefe), y=mBeta))+ 
+  geom_errorbar(data=Makroph_Depth,aes(x=(Tiefe),ymin=mBeta-sdBeta, ymax=mBeta+sdBeta), width=.1)+
+  ylab("Beta richness")+xlab(("Depth (m)"))
+C1<-ggplot(data=Makroph_Lake_DepthS)+
+  geom_line(aes(x=Tiefe, y=GAMMA, group=interaction(Lake, YEAR)),col="grey")+ scale_x_reverse()+
+  geom_line(data=Makroph_Depth,aes(x=(Tiefe), y=mGamma))+ 
+  geom_errorbar(data=Makroph_Depth,aes(x=(Tiefe),ymin=mGamma-sdGamma, ymax=mGamma+sdGamma), width=.1)+
+  ylab("Gamma richness")+xlab(("Depth (m)"))
+ggarrange(A1,B1,C1,ncol=3,nrow=1,labels="auto")
+```
+
+# Pattern analysis
+
+
+
+```{r}
+
+PEAK_LAKE_ALL$DepthGroup<-if_else(PEAK_LAKE_ALL$AlphaPeakDepth>-1,"1",
+                                  if_else(PEAK_LAKE_ALL$AlphaPeakDepth>-2,"2",
+                                          if_else(PEAK_LAKE_ALL$AlphaPeakDepth>-4,"3","4")))
+
+PEAKCLASS1<-PEAK_LAKE_ALL %>% group_by(DepthGroup) %>% summarise(n_distinct(interaction(Lake,YEAR)))
+
+PEAKCLASS1
+Peak_Gamma %>% group_by(GammaPeakDepth) %>% summarise(n_distinct(interaction(Lake,YEAR)))
+
+Peak_Beta %>% group_by(BetaPeakDepth) %>% summarise(n_distinct(interaction(Lake,YEAR)))
+
+chisq.test(PEAKCLASS1$`n_distinct(interaction(Lake, YEAR))`)
+```
+

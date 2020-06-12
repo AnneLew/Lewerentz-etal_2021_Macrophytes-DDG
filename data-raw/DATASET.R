@@ -174,6 +174,7 @@ Makroph_comm_S2 <- Makroph %>% group_by(Gewässer, MST_NR, DATUM, Probestelle, T
 
 Makroph_comm_S <-  right_join(Makroph_comm_S2, Makroph_dataset, by=c("Gewässer", "MST_NR", "YEAR", "Probestelle"))
 Makroph_comm_S$Tiefe <- revalue(Makroph_comm_S$Probestelle, c("0-1"="-0.5", "1-2"="-1.5", "2-4"="-3","4-x"="-5"))
+Makroph_comm_S<-Makroph_comm_S%>%mutate(Tiefe=as.numeric(Tiefe))
 
 usethis::use_data(Makroph_comm_S, overwrite = TRUE)
 

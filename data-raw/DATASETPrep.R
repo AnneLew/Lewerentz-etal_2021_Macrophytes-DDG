@@ -1,0 +1,202 @@
+## LOAD Packages
+#library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(vegan)
+#library(gamm4)
+#library(ggpubr)
+library(stringr)
+#library(corrplot)
+
+### Data import
+## Macrophytes
+MakrophS_raw <- Makroph_comm_S  %>% ungroup() %>% select(-LAKE_TYPE2) %>% rename(Lake=Gewässer)%>%mutate(YEAR=as.factor(YEAR))
+MakrophS_raw[is.na(MakrophS_raw)]<-0 #Replace all NA with zero
+
+
+##Morphology data of lakes in Bavaria
+# Morphology <- read.csv("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/3_WFD-Project/01_Input/lake-data.csv",skip=0 , dec=",",header=TRUE, sep=";")%>%
+#   select(-SizeClass, -Region,-Depth,-Volume_hm3, -Type, -Type_simpl, -See_deutsch, -Source, -LastMapping, -Type2, -MNW_Sommer, -MW_Sommer, -MHW_Sommer, -Considered,MHWMNW_Diff, -VQ, -Rechtswert, -Hochwert) #Exclude parameters I don't use
+#
+# usethis::use_data(Morphology, overwrite = TRUE)
+
+Morph <- Morphology %>% #Import morphological Dataset
+  filter(Nat.artifi == "n") %>% #Exclude all artificial lakes
+  filter(Lake !="Barmsee") %>%#Weil nur 1 Kartierung
+  filter(Area_ha >=50) %>%#No WFD moniotoring
+  filter(maxDepth_m > 10) %>% #Exclude shallow lakes
+  select(-Nat.artifi) %>%#Exclude parameters I don't use
+  rename(WLF = MHWMNW_Diff)
+
+##Selection of macrophytes of lakes of interest (without artificial & shallow)
+MakrophS_ALL <- merge(MakrophS_raw, Morph, by.x=c("Lake"), by.y=c("Name_Makro_short") )[,1:97]
+
+## Chemistry
+Chem_table <- Chem.Mean.YearDF %>% dplyr::rename(YEAR = Var2, Lake = Var1) #Import Chemical Dataset: Mean for the productive Summer Month between Apr - Aug
+Chem_ALL <- Chem_table %>%  group_by(Lake, YEAR)%>% spread(key = Var3, value = value) #Transformation in Table
+
+Chem_selection <- Chem_ALL %>% rowwise() %>%
+  transmute(Lake, YEAR,
+            #Selection of surface values
+            Chloride = Chlorid..mg.l...0.0.m.Tiefe.,
+            Conduct = LF..20..U.00B0.C..vor.Ort...U.00B5.S.cm...0.0.m.Tiefe.,
+            Ntot = N.ges...mg.l...0.0.m.Tiefe.,
+            NH4N = NH4.N..mg.l...0.0.m.Tiefe.,
+            NO3N = NO3.N..mg.l...0.0.m.Tiefe.,
+            O2diss = O2.gel.f6.st..mg.l...0.0.m.Tiefe.,
+            Ptot = P.ges...mg.l...0.0.m.Tiefe.,
+            pH = pH.Wert..vor.Ort.......0.0.m.Tiefe.,
+            SiO2 = SiO2..mg.l...0.0.m.Tiefe.,
+            Temp = Wassertemp..vor.Ort....U.00B0.C...0.0.m.Tiefe.,
+            Transp = Sichttiefe..cm...0.0.m.Tiefe.,
+            SAC = SPAK.254.nm..1.m...0.0.m.Tiefe. ,
+            ##Calculation of mean values between surface and 6m depth
+            # Chlorid_0_6 = mean(c(Chlorid..mg.l...0.0.m.Tiefe., Chlorid..mg.l...2.0.m.Tiefe., Chlorid..mg.l...4.0.m.Tiefe., Chlorid..mg.l...6.0.m.Tiefe.), na.rm=TRUE),
+            # LF_0_6 = mean(c(LF..20..U.00B0.C..vor.Ort...U.00B5.S.cm...0.0.m.Tiefe., LF..20..U.00B0.C..vor.Ort...U.00B5.S.cm...2.0.m.Tiefe.,LF..20..U.00B0.C..vor.Ort...U.00B5.S.cm...4.0.m.Tiefe., LF..20..U.00B0.C..vor.Ort...U.00B5.S.cm...6.0.m.Tiefe.), na.rm=TRUE),
+            # Nges_0_6 = mean(c(N.ges...mg.l...0.0.m.Tiefe., N.ges...mg.l...2.0.m.Tiefe., N.ges...mg.l...4.0.m.Tiefe., N.ges...mg.l...6.0.m.Tiefe.), na.rm=TRUE),
+            # NH4N_0_6 = mean(c(NH4.N..mg.l...0.0.m.Tiefe., NH4.N..mg.l...2.0.m.Tiefe., NH4.N..mg.l...4.0.m.Tiefe., NH4.N..mg.l...6.0.m.Tiefe.), na.rm=TRUE),
+            # NO3N_0_6 = mean(c(NO3.N..mg.l...0.0.m.Tiefe., NO3.N..mg.l...2.0.m.Tiefe., NO3.N..mg.l...4.0.m.Tiefe., NO3.N..mg.l...6.0.m.Tiefe.), na.rm=TRUE),
+            # O2gel_0_6 = mean(c(O2.gel.f6.st..mg.l...0.0.m.Tiefe., O2.gel.f6.st..mg.l...2.0.m.Tiefe., O2.gel.f6.st..mg.l...4.0.m.Tiefe., O2.gel.f6.st..mg.l...6.0.m.Tiefe.), na.rm=TRUE),
+            # Pges_0_6 = mean(c(P.ges...mg.l...0.0.m.Tiefe., P.ges...mg.l...2.0.m.Tiefe., P.ges...mg.l...4.0.m.Tiefe., P.ges...mg.l...6.0.m.Tiefe.), na.rm=TRUE),
+            # pH_0_6 = mean(c(pH.Wert..vor.Ort.......0.0.m.Tiefe.,pH.Wert..vor.Ort.......2.0.m.Tiefe.,pH.Wert..vor.Ort.......4.0.m.Tiefe.,pH.Wert..vor.Ort.......6.0.m.Tiefe.), na.rm=TRUE),
+            # SiO2_0_6 = mean(c(SiO2..mg.l...0.0.m.Tiefe., SiO2..mg.l...2.0.m.Tiefe., SiO2..mg.l...4.0.m.Tiefe., SiO2..mg.l...6.0.m.Tiefe.), na.rm=TRUE),
+            # Temp_0_6 = mean(c(Wassertemp..vor.Ort....U.00B0.C...0.0.m.Tiefe.,Wassertemp..vor.Ort....U.00B0.C...2.0.m.Tiefe.,Wassertemp..vor.Ort....U.00B0.C...4.0.m.Tiefe.,
+            #                   Wassertemp..vor.Ort....U.00B0.C...6.0.m.Tiefe.), na.rm=TRUE),
+            # #Calculation of sd between surface and 6m depth
+            # Chlorid_0_6_sd = sd(c(Chlorid..mg.l...0.0.m.Tiefe., Chlorid..mg.l...2.0.m.Tiefe., Chlorid..mg.l...4.0.m.Tiefe., Chlorid..mg.l...6.0.m.Tiefe.), na.rm=TRUE),
+            # LF_0_6_sd = sd(c(LF..20..U.00B0.C..vor.Ort...U.00B5.S.cm...0.0.m.Tiefe., LF..20..U.00B0.C..vor.Ort...U.00B5.S.cm...2.0.m.Tiefe., LF..20..U.00B0.C..vor.Ort...U.00B5.S.cm...4.0.m.Tiefe., LF..20..U.00B0.C..vor.Ort...U.00B5.S.cm...6.0.m.Tiefe.), na.rm=TRUE),
+            # Nges_0_6_sd = sd(c(N.ges...mg.l...0.0.m.Tiefe., N.ges...mg.l...2.0.m.Tiefe., N.ges...mg.l...4.0.m.Tiefe., N.ges...mg.l...6.0.m.Tiefe.), na.rm=TRUE),
+            # NH4N_0_6_sd = sd(c(NH4.N..mg.l...0.0.m.Tiefe., NH4.N..mg.l...2.0.m.Tiefe., NH4.N..mg.l...4.0.m.Tiefe., NH4.N..mg.l...6.0.m.Tiefe.), na.rm=TRUE),
+            # NO3N_0_6_sd = sd(c(NO3.N..mg.l...0.0.m.Tiefe., NO3.N..mg.l...2.0.m.Tiefe., NO3.N..mg.l...4.0.m.Tiefe., NO3.N..mg.l...6.0.m.Tiefe.), na.rm=TRUE),
+            # O2gel_0_6_sd = sd(c(O2.gel.f6.st..mg.l...0.0.m.Tiefe., O2.gel.f6.st..mg.l...2.0.m.Tiefe., O2.gel.f6.st..mg.l...4.0.m.Tiefe., O2.gel.f6.st..mg.l...6.0.m.Tiefe.), na.rm=TRUE),
+            # Pges_0_6_sd = sd(c(P.ges...mg.l...0.0.m.Tiefe., P.ges...mg.l...2.0.m.Tiefe., P.ges...mg.l...4.0.m.Tiefe., P.ges...mg.l...6.0.m.Tiefe.), na.rm=TRUE),
+            # pH_0_6_sd = sd(c(pH.Wert..vor.Ort.......0.0.m.Tiefe.,pH.Wert..vor.Ort.......2.0.m.Tiefe.,pH.Wert..vor.Ort.......4.0.m.Tiefe.,pH.Wert..vor.Ort.......6.0.m.Tiefe.), na.rm=TRUE),
+            # SiO2_0_6_sd = sd(c(SiO2..mg.l...0.0.m.Tiefe., SiO2..mg.l...2.0.m.Tiefe., SiO2..mg.l...4.0.m.Tiefe., SiO2..mg.l...6.0.m.Tiefe.), na.rm=TRUE),
+            Tempsd = sd(c(Wassertemp..vor.Ort....U.00B0.C...0.0.m.Tiefe.,Wassertemp..vor.Ort....U.00B0.C...2.0.m.Tiefe.,Wassertemp..vor.Ort....U.00B0.C...4.0.m.Tiefe.,
+                          Wassertemp..vor.Ort....U.00B0.C...6.0.m.Tiefe.), na.rm=TRUE)) #%>%
+  #mutate(YEAR=as.numeric(YEAR))
+#filter_at(vars(contains("_")), any_vars(!is.na(.)))
+
+
+Chem_uniform <- Chem_selection[rowSums(is.na(Chem_selection[,c(3:13,15)]))==0,] #Selection of datasets (lake&year) where all surface measurements (except SAK) are available at once
+
+Chem_uniform_LOI <- inner_join(Chem_uniform, Morph, by=c("Lake"="Name_chem")) #Chem of Lakes of Interest
+
+## New column to destingush between different Datasets with SAK (Spektraler Absorptionskoeffizient) and without SAK (="NoSAK")
+Chem_uniform_LOI$dataset<-Chem_uniform_LOI$SAC
+Chem_uniform_LOI$dataset[!is.na(Chem_uniform_LOI$dataset)]<-"SAK"
+Chem_uniform_LOI$dataset[is.na(Chem_uniform_LOI$dataset)]<-"No"
+
+## New column to destingush between different Datasets with WLF (Water level fluctuation) and without WLF (="NoWLF")
+Chem_uniform_LOI$datasetWLF<-Chem_uniform_LOI$WLF
+Chem_uniform_LOI$datasetWLF[!is.na(Chem_uniform_LOI$datasetWLF)]<-"WLF"
+Chem_uniform_LOI$datasetWLF[is.na(Chem_uniform_LOI$datasetWLF)]<-"No"
+
+## New column give information about WLF & SAK
+Chem_uniform_LOI$datasettot<-NA
+Chem_uniform_LOI$datasettot[(Chem_uniform_LOI$dataset=="SAK")&(Chem_uniform_LOI$datasetWLF=="WLF")]<-"LEVEL3"
+Chem_uniform_LOI$datasettot[is.na(Chem_uniform_LOI$datasettot)]<-"LEVEL2"
+
+
+
+
+############ CALCULATION METRICES
+SPlength <- length(MakrophS_ALL)-1
+MakrophS_ALL$ALPHA <- specnumber(MakrophS_ALL[5:(SPlength)])
+MakrophS_ALL$DENS_ALPHA <- rowSums(MakrophS_ALL[c(5:(SPlength))]^3)
+
+# Combined dataset without differentiation in Transects - -"MST_NR" or Depth -"Probestelle"
+Makroph_Lake_ALL <- MakrophS_ALL %>% group_by(Lake, YEAR) %>%
+  summarise_at(vars(-"MST_NR", -"Probestelle"), mean, na.rm=TRUE) ##Mittelwerte der Abundance pro See #, -c((SPlengthS-3):(SPlengthS+4))
+SPlength <- length(Makroph_Lake_ALL)-3
+Makroph_Lake_ALL$GAMMA <- specnumber(Makroph_Lake_ALL[c(4:SPlength)])
+Makroph_Lake_ALL$DENS_GAMMA <- rowSums(Makroph_Lake_ALL[c(4:SPlength)]^3)
+
+
+## Create table to destinguish between Datasets of Macroph_ALL: without Chem ("NoChem"), "SAK","NoSAK"
+DATASET <- left_join(Makroph_Lake_ALL, Chem_uniform_LOI, by.x=c("Lake", "YEAR"), by.y=c("Name_Makro_short","YEAR") )[,c(1:2,121,122,123)]
+DATASET$dataset[is.na(DATASET$dataset)]<-"NoChem"
+DATASET$datasetWLF[is.na(DATASET$datasetWLF)]<-"NoChem"
+DATASET$datasettot[DATASET$dataset=="NoChem"]<-"LEVEL1"
+
+
+MakrophS_ALL<-merge(MakrophS_ALL, DATASET, by=c("Lake", "YEAR")) #Add dataset information to Macrophyte table
+Makroph_Lake_ALL<-merge(Makroph_Lake_ALL, DATASET, by=c("Lake", "YEAR")) #Add dataset information to Macrophyte lakes table
+
+
+## Check for annual trend -> Makes no sense due to sampling strategy
+Makroph_YEAR<-Makroph_Lake_ALL %>% group_by(YEAR) %>% summarise_at(vars(-"Lake"), mean, na.rm=TRUE)
+Makroph_YEAR$GAMMA<-specnumber(Makroph_YEAR[c(2:93)])
+
+#plot(Makroph_YEAR$YEAR, Makroph_YEAR$GAMMA)
+
+
+## Diversity peak analysis
+#detach(package::plyr)
+PEAK_ALL <- MakrophS_ALL %>% group_by(Lake, MST_NR, YEAR) %>%  filter(ALPHA == max(ALPHA)) %>% filter(ALPHA>0) #For each Transect filter the depth with the highest species number if there are species
+# For each lake & year: Calculation of mean depth (=PEAK)
+PEAK_LAKE_ALL <- PEAK_ALL %>% group_by(Lake, YEAR) %>%
+  dplyr::summarise(AlphaPeakDepth = mean(Tiefe), AlphaPeakDepth_sd=sd(Tiefe), AlphaPeakRichness = mean(ALPHA), AlphaPeakRichness_sd=sd(ALPHA))
+
+PEAK_LAKE_ALL <- merge(PEAK_LAKE_ALL, Makroph_Lake_ALL[c(1,2,98)], by=c("Lake", "YEAR")) #Add gamma diversity
+PEAK_LAKE_Chem <- merge(PEAK_LAKE_ALL, Makroph_Lake_ALL[c(1,2,100,101,102)], by=c("Lake", "YEAR")) #Add dataset type
+
+
+
+PEAK_LAKE_ALL$AlphaPeakDepth_sc <- scale(PEAK_LAKE_ALL$AlphaPeakDepth)[,1]
+PEAK_LAKE_ALL$AlphaPeakRichness_sc <- scale(PEAK_LAKE_ALL$AlphaPeakRichness)[,1]
+histogram(PEAK_LAKE_ALL$AlphaPeakDepth_sc)
+histogram(PEAK_LAKE_ALL$AlphaPeakRichness_sc)
+
+
+PEAK_LAKE_ALL<-merge(PEAK_LAKE_ALL, DATASET, by=c("Lake", "YEAR")) #Add dataset information to Peak table
+
+
+
+### Depth dependent Analysis for each lake & year
+Makroph_Lake_DepthS <- MakrophS_ALL %>% group_by(Lake, Probestelle, YEAR) %>% #Tiefe
+  summarise_at(vars(-"MST_NR",-"dataset",-"datasetWLF", -"datasettot"), mean, na.rm=TRUE) #%>% ##Mittelwerte der Abundance pro Tiefenstufe und See
+#summarise(mean=mean(),spnrALLsd = sd(spnrALL))
+Makroph_Lake_DepthSD <- MakrophS_ALL %>% group_by(Lake, Probestelle, YEAR) %>% #Tiefe
+  summarise(ALPHAsd = sd(ALPHA))
+Makroph_Lake_DepthS <- merge(Makroph_Lake_DepthS, Makroph_Lake_DepthSD, by=c("Lake", "Probestelle", "YEAR"))
+
+SPlength <- length(Makroph_Lake_DepthS)-5
+Makroph_Lake_DepthS$GAMMA <- specnumber(Makroph_Lake_DepthS[c(4:SPlength )]) # Gamma richnes
+Makroph_Lake_DepthS$DENS_GAMMA <- rowSums(Makroph_Lake_DepthS[c(4:SPlength)]^3) # Species density at gamma level
+Makroph_Lake_DepthS$BETA <- Makroph_Lake_DepthS$GAMMA-Makroph_Lake_DepthS$ALPHA #Beta = Gamma - mean(Alpha)
+
+Makroph_Lake_DepthS<-merge(Makroph_Lake_DepthS, DATASET, by=c("Lake", "YEAR")) #Add dataset information to Peak table
+
+
+
+Makroph_Depth <- Makroph_Lake_DepthS %>% group_by(Probestelle) %>% summarise(mAlpha=mean(ALPHA), sdAlpha=sd(ALPHA),
+                                                                             mBeta=mean(BETA), sdBeta=sd(BETA),
+                                                                             mGamma=mean(GAMMA), sdGamma=sd(GAMMA), Tiefe=mean(Tiefe))
+
+Peak_Gamma <- Makroph_Lake_DepthS  %>%  group_by(Lake, YEAR, dataset, datasetWLF, datasettot) %>% filter(GAMMA == max(GAMMA)) %>%
+  select("Lake", "YEAR", "Tiefe", "GAMMA", "dataset", "datasetWLF", "datasettot") %>% summarise(GammaPeakDepth=mean(Tiefe), GammaPeakRichness=mean(GAMMA))
+
+Peak_Gamma <- merge(Peak_Gamma,Makroph_Lake_ALL[c(1,2,98)], by=c("Lake", "YEAR"))
+
+Peak_Beta <- Makroph_Lake_DepthS  %>%  group_by(Lake, YEAR, dataset, datasetWLF, datasettot) %>% filter(BETA == max(BETA)) %>%
+  select("Lake", "YEAR", "Tiefe", "BETA", "dataset", "datasetWLF", "datasettot") %>% summarise(BetaPeakDepth=mean(Tiefe),
+                                                                                                   BetaPeakRichness=mean(BETA))
+
+Peak_Beta <- merge(Peak_Beta,Makroph_Lake_ALL[c(1,2,98)], by=c("Lake", "YEAR"))
+
+
+PEAK<-merge(PEAK_LAKE_ALL, Peak_Gamma[c(1,2,6,7)], by=c("Lake", "YEAR"))
+PEAK<-merge(PEAK, Peak_Beta[c(1,2,6,7)], by=c("Lake", "YEAR"))
+
+Chem_uniform_LOIx <- inner_join(Chem_uniform_LOI, PEAK, by.x=c("Name_Makro_short", "YEAR"), by.y=c("Lake", "YEAR"))[1:30]
+PEAK_Chem<-inner_join(Chem_uniform_LOI, PEAK, by.y=c("Lake", "YEAR"),by.x=c("Name_Makro_short", "YEAR")) #New dataset with chem information of LOI
+
+
+##########################
+usethis::use_data(MakrophS_ALL, overwrite = TRUE)
+usethis::use_data(Makroph_Lake_DepthS, overwrite = TRUE)
+usethis::use_data(Makroph_Depth, overwrite = TRUE)
+
+usethis::use_data(PEAK_LAKE_ALL, overwrite = TRUE)
+usethis::use_data(PEAK, overwrite = TRUE)

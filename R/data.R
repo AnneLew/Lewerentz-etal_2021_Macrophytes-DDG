@@ -11,3 +11,8 @@
 #' }
 #' @source \url{http://www.diamondse.info/}
 "Chem.Mean.YearDF"
+
+#
+#
+#
+"Morphology"
