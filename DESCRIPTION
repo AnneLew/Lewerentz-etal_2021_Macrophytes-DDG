@@ -4,7 +4,9 @@ Title: What the Package Does (Title Case)
 Version: 0.1.0
 Author: Anne Lewerentz
 Maintainer: The package maintainer <anne.lewerentz@uni-wuerzburg.de>
-Description: Analysis of Depth Diversity Gradients for submerged macrophytes in Bavaria
+Description: Analysis of Depth Diversity Gradients (DDG) for submerged macrophytes in Bavaria. Raw data provided by the LfU Bayern www.lfu.bayern.de/
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
+URL: https://github.com/AnneLew/MacrophytesDDG
+BugReports: https://github.com/AnneLew/MacrophytesDDG/issues
