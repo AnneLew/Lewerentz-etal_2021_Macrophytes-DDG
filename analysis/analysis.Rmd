@@ -16,6 +16,7 @@ library(magrittr)
 library(knitr)
 library(MacrophytesDDG)
 library(ggpubr)
+library(corrplot)
 
 ```
 
@@ -108,16 +109,357 @@ ggplot(Makroph_Lake_DepthS, aes(x=Tiefe, y=GAMMA, group=interaction(Lake,YEAR), 
 ## PEAK Plot
 PPalpha<-ggplot(PEAK, aes(y=AlphaPeakRichness, x=AlphaPeakDepth, col=datasettot))+
   geom_point()+# labs(col = "Pattern type")+
-  #geom_text(aes(label=paste(Gew?sser,YEAR)),hjust=0, vjust=0)+
-  xlab("AlphaPeak Depth (m)")+ylab("AlphaPeak richness (N)")+
+  xlab(expression(D[alpha][max](m)))+ylab(expression(R[alpha][max](N)))+
   theme(legend.position = c(0.9, 0.2))+ scale_x_reverse()
 
 PPbeta<-ggplot(PEAK, aes(x=BetaPeakDepth, y=BetaPeakRichness, col=datasettot))+geom_point()+ scale_x_reverse()+
-  xlab("BetaPeak Depth (m)")+ylab("BetaPeak richness (N)")
+  xlab(expression(D[beta][max](m)))+ylab(expression(R[beta][max](N)))
 
 PPgamma<-ggplot(PEAK, aes(x=GammaPeakDepth, y=GammaPeakRichness, col=datasettot))+geom_point()+ scale_x_reverse()+
-  xlab("GammaPeak Depth (m)")+ylab("GammaPeak richness (N)")
+  xlab(expression(D[gamma][max](m)))+ylab(expression(R[gamma][max](N)))
 
 ggarrange(PPalpha,PPbeta,PPgamma, ncol=3,common.legend = T, legend="bottom", labels="auto")
+```
+
+
+## DRIVERS
+
+
+```{r, fig.width=14, fig.height=12}
+corrplot(cor(PEAK_Chem_norm[c(3:16,19)], use="complete.obs"), type = "upper", method = "number", insig = "blank")
+corrplot(cor(PEAK_Chem_norm[c(20,22,27,28,29,30,3:16,19)], use="complete.obs"), type = "upper", method = "number", insig = "blank")
+plot(PEAK_Chem_norm$GAMMA,PEAK_Chem_norm$Area_ha)
+plot(PEAK_Chem_norm$GammaPeakRichness,PEAK_Chem_norm$Area_ha)
+```
+
+
+```{r}
+################ PCA ###############################################
+library(ggbiplot)
+
+label_lake<- PEAK_Chem_norm[complete.cases(PEAK_Chem_norm[,c(3:13,15,16)]),] #LEVEL 3 data #19 #
+lak.pca <- prcomp(na.omit(label_lake[,c(3:13,15,16)]),center = TRUE, scale. = TRUE)
+#print(lak.pca)
+#plot(lak.pca, type="l")
+#summary(lak.pca) 
+
+p1<- ggbiplot(lak.pca, choices = 1:2, obs.scale = 1, var.scale = 1,labels=label_lake$Lake, arrow.color = "#FF0000",
+         #groups = group_lake_withoutSAK, 
+         ellipse = TRUE, cicle = TRUE) #+ xlim(-4,4) +ylim(-4,4)
+p2<- ggbiplot(lak.pca, choices = 3:4, obs.scale = 1, var.scale = 1,labels=label_lake$Lake, arrow.color = "#FF0000",
+         #groups = group_lake_withoutSAK, 
+         ellipse = TRUE, cicle = TRUE) #+ xlim(-4,4) +ylim(-4,4)
+figure <- ggarrange(p1,p2,
+                    #widths = c(2.3,2),heights = c(1.1,1,1,1.2),
+                    labels = c("A","B"),
+                    #label.x = c(0.18,0,0.18,0,0.18,0,0.18,0),label.y = c(0.8,0.8,1,1,1,1,1,1),
+                    ncol = 2, nrow = 1, common.legend = TRUE, legend = "bottom", align = "hv")
+figure
+
+PCA <- (data.frame(label_lake$Lake))
+PCA$YEAR <- label_lake$YEAR
+PCA$Morph_PC1 <- lak.pca$x[,1]
+PCA$Morph_PC2 <- lak.pca$x[,2]
+PCA$Morph_PC3 <- lak.pca$x[,3]
+PCA$Morph_PC4 <- lak.pca$x[,4]
+PCA$Morph_PC5 <- lak.pca$x[,5]
+names(PCA)[1]<-"Lake"
+
+
+PEAK_PCA<-merge(PCA, PEAK_Chem_norm, by=c("Lake", "YEAR"))
+
+
+### Figure about PCA loadings
+print(lak.pca)
+
+par(mfrow=c(1,5))
+axis1<-barplot(lak.pca$rotation[,1], main="PC1", las=2,horiz = TRUE)
+axis2<-barplot(lak.pca$rotation[,2], main="PC2", yaxt='n',horiz = TRUE)
+axis3<-barplot(lak.pca$rotation[,3], main="PC3", yaxt='n',horiz = TRUE)
+axis4<-barplot(lak.pca$rotation[,4], main="PC4", yaxt='n',horiz = TRUE)
+axis4<-barplot(lak.pca$rotation[,5], main="PC5",yaxt='n',horiz = TRUE)
+```
+
+
+
+
+```{r}
+library(gamm4)
+gam_AlphaPeakDepth <- gamm4((AlphaPeakDepth) ~ s(Morph_PC1)+s(Morph_PC2)+s(Morph_PC4)+s(Morph_PC5),
+                            random= ~(1|Lake), # package gamm4
+                            data=PEAK_PCA)
+
+summary(gam_AlphaPeakDepth$gam)
+
+par(mfrow=c(1,4))
+plot(gam_AlphaPeakDepth$gam,residuals=TRUE, main = "PEAKDepth", shade = T,seWithMean=T)
+```
+
+```{r}
+gam_AlphaPeakRichness <- gamm4(AlphaPeakRichness ~ s(Morph_PC3),
+                               random= ~(1|Lake), # package gamm4
+                               data=PEAK_PCA)
+
+summary(gam_AlphaPeakRichness$gam)
+par(mfrow=c(1,1))
+plot(gam_AlphaPeakRichness$gam,residuals=TRUE, main = "PEAKRichness", shade = T,seWithMean=T)
+```
+
+
+## Temporal change
+
+
+```{r, fig.width=10, fig.height=13}
+library(ggpmisc)
+
+T0<-ggplot(PEAK_LAKE_ALL%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=GAMMA, group=factor(Lake))) +
+  xlab("")+ylab("GAMMA richness")+theme(axis.text.x = element_text(angle = 90, hjust = 1))+ 
+  geom_point(alpha = 0.3) +facet_wrap(vars(Lake),nrow=3) +
+  geom_smooth(method = "lm", se = F) +
+  stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "left", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3)+
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")),
+                  label.x = 'left', label.y = 0.35, size = 3)
+
+
+
+T1<-ggplot(PEAK_LAKE_ALL%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=AlphaPeakDepth, group=factor(Lake)))+
+  xlab("")+ylab("AlphaPeakDepth")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+ 
+  geom_point(alpha = 0.3) +facet_wrap(vars(Lake),nrow=3) +
+  geom_smooth(method = "lm", se = F) +
+  stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "left", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3)+
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")),
+                  label.x = 'left', label.y = -3.8, size = 3)
+
+
+
+T2<-ggplot(PEAK_LAKE_ALL%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=AlphaPeakRichness, group=factor(Lake)))+
+  xlab("")+ylab("AlphaPeakRichness")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+ 
+  geom_point(alpha = 0.3) +facet_wrap(vars(Lake),nrow=3) +
+  geom_smooth(method = "lm", se = F) +
+  stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "left", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3)+
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")),
+                  label.x = 'left', label.y = -3.8, size = 3)
+
+ggarrange(T1,T2, nrow=2)
+```
+
+
+```{r, fig.width=10, fig.height=13}
+T3<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=BetaPeakDepth, group=factor(Lake)))+
+  xlab("")+ylab("BetaPeakDepth")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+ 
+  geom_point(alpha = 0.3) +facet_wrap(vars(Lake),nrow=3) +
+  geom_smooth(method = "lm", se = F) +
+  stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "left", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3)+
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")),
+                  label.x = 'left', label.y = -3.8, size = 3)
+
+T4<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=BetaPeakRichness, group=factor(Lake)))+
+  xlab("")+ylab("BetaPeakRichness")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+ 
+  geom_point(alpha = 0.3) +facet_wrap(vars(Lake),nrow=3) +
+  geom_smooth(method = "lm", se = F) +
+  stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "left", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3)+
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")),
+                  label.x = 'left', label.y = -3.8, size = 3)
+
+ggarrange(T3,T4, nrow=2)
+
+T5<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=GammaPeakDepth, group=factor(Lake)))+
+  xlab("")+ylab("GammaPeakDepth")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+ 
+  geom_point(alpha = 0.3) +facet_wrap(vars(Lake),nrow=3) +
+  geom_smooth(method = "lm", se = F) +
+  stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "left", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3)+
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")),
+                  label.x = 'left', label.y = -3.8, size = 3)
+
+T6<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=GammaPeakRichness, group=factor(Lake)))+
+  xlab("")+ylab("GammaPeakRichness")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+ 
+  geom_point(alpha = 0.3) +facet_wrap(vars(Lake),nrow=3) +
+  geom_smooth(method = "lm", se = F) +
+  stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "left", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3)+
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")),
+                  label.x = 'left', label.y = -3.8, size = 3)
+
+ggarrange(T5,T6, nrow=2)
+```
+
+
+
+
+
+
+```{r}
+#library(broom) # Package would help to do the following easier. Found it too late.
+
+PEAK_LAKE_ALL<-PEAK_LAKE_ALL %>%mutate(YEAR=as.numeric(YEAR))
+
+
+GammaModel<-PEAK_LAKE_ALL%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3) %>% 
+  do({
+    mod = lm(GAMMA ~ YEAR, data = .)
+    data.frame(Slope = coef(mod)[2],pValue=lmp(mod))
+  }) %>% plyr::rename(c("Slope"="GammaSlope", "pValue"="GammaPValue"))
+
+AlphaPeakRichnessModel<-PEAK_LAKE_ALL%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3) %>% 
+  do({
+    mod = lm(AlphaPeakRichness ~ YEAR, data = .)
+    data.frame(Slope = coef(mod)[2],pValue=lmp(mod))
+  }) %>% plyr::rename(c("Slope"="AlphaPeakRichnessSlope", "pValue"="AlphaPeakRichnessPValue"))
+
+AlphaPeakDepthModel<-PEAK_LAKE_ALL%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3) %>% 
+  do({
+    mod = lm(AlphaPeakDepth ~ YEAR, data = .)
+    data.frame(Slope = coef(mod)[2],pValue=lmp(mod))
+  }) %>% plyr::rename(c("Slope"="AlphaPeakDepthSlope", "pValue"="AlphaPeakDepthPValue"))
+
+AlphaPeakModel <- merge (AlphaPeakDepthModel, AlphaPeakRichnessModel, by="Lake")
+
+
+BetaPeakRichnessModel<-PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3) %>% 
+  do({
+    mod = lm(BetaPeakRichness ~ YEAR, data = .)
+    data.frame(Slope = coef(mod)[2],pValue=lmp(mod))
+  }) %>% plyr::rename(c("Slope"="BetaPeakRichnessSlope", "pValue"="BetaPeakRichnessPValue"))
+
+BetaPeakDepthModel<-PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3) %>% 
+  do({
+    mod = lm(BetaPeakDepth ~ YEAR, data = .)
+    data.frame(Slope = coef(mod)[2],pValue=lmp(mod))
+  }) %>% plyr::rename(c("Slope"="BetaPeakDepthSlope", "pValue"="BetaPeakDepthPValue"))
+
+BetaPeakModel <- merge (BetaPeakDepthModel, BetaPeakRichnessModel, by="Lake")
+
+GammaPeakRichnessModel<-PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3) %>% 
+  do({
+    mod = lm(GammaPeakRichness ~ YEAR, data = .)
+    data.frame(Slope = coef(mod)[2],pValue=lmp(mod))
+  }) %>% plyr::rename(c("Slope"="GammaPeakRichnessSlope", "pValue"="GammaPeakRichnessPValue"))
+
+GammaPeakDepthModel<-PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3) %>% 
+  do({
+    mod = lm(GammaPeakDepth ~ YEAR, data = .)
+    data.frame(Slope = coef(mod)[2],pValue=lmp(mod))
+  }) %>% plyr::rename(c("Slope"="GammaPeakDepthSlope", "pValue"="GammaPeakDepthPValue"))
+
+GammaPeakModel <- merge (GammaPeakDepthModel, GammaPeakRichnessModel, by="Lake")
+
+PeakModel <- merge (AlphaPeakModel,BetaPeakModel,by="Lake")
+PeakModel <- merge (PeakModel,GammaPeakModel,by="Lake")
+
+Model <- merge (GammaModel,PeakModel,by="Lake")
+
+ModelT<-Model %>% mutate(GammaTrend=ifelse(Model$GammaSlope>0,"+",ifelse(Model$GammaSlope<0,"-","0"))) %>%
+  mutate(GammapV=ifelse(GammaPValue<0.001,"***",ifelse(GammaPValue<0.01,"**",ifelse(GammaPValue<0.05,"*",ifelse(GammaPValue<0.1,".","NA")))))%>%
+  
+  mutate(AlphaPeakDepthTrend=ifelse(Model$AlphaPeakDepthSlope>0.5*0,"+",ifelse(Model$AlphaPeakDepthSlope<0,"-","0"))) %>%
+  mutate(AlphaPeakDepthpV=ifelse(AlphaPeakDepthPValue<0.001,"***",ifelse(AlphaPeakDepthPValue<0.01,"**",ifelse(AlphaPeakDepthPValue<0.05,"*",ifelse(AlphaPeakDepthPValue<0.1,".","NA")))))%>%
+  
+  mutate(AlphaPeakRichnessTrend=ifelse(Model$AlphaPeakRichnessSlope>0,"+",ifelse(Model$AlphaPeakRichnessSlope<0,"-","0")))%>%
+  mutate(AlphaPeakRichnesspV=ifelse(AlphaPeakRichnessPValue<0.001,"***",ifelse(AlphaPeakRichnessPValue<0.01,"**",ifelse(AlphaPeakRichnessPValue<0.05,"*",ifelse(AlphaPeakRichnessPValue<0.1,".","NA")))))%>%
+  
+  mutate(BetaPeakDepthTrend=ifelse(Model$BetaPeakDepthSlope>0,"+",ifelse(Model$BetaPeakDepthSlope<0,"-","0"))) %>%
+  mutate(BetaPeakDepthpV=ifelse(BetaPeakDepthPValue<0.001,"***",ifelse(BetaPeakDepthPValue<0.01,"**",ifelse(BetaPeakDepthPValue<0.05,"*",ifelse(BetaPeakDepthPValue<0.1,".","NA")))))%>%
+  
+  mutate(BetaPeakRichnessTrend=ifelse(Model$BetaPeakRichnessSlope>0,"+",ifelse(Model$BetaPeakRichnessSlope<0,"-","0")))%>%
+  mutate(BetaPeakRichnesspV=ifelse(BetaPeakRichnessPValue<0.001,"***",ifelse(BetaPeakRichnessPValue<0.01,"**",ifelse(BetaPeakRichnessPValue<0.05,"*",ifelse(BetaPeakRichnessPValue<0.1,".","NA")))))%>%
+  
+  mutate(GammaPeakDepthTrend=ifelse(Model$GammaPeakDepthSlope>0,"+",ifelse(Model$GammaPeakDepthSlope<0,"-","0"))) %>%
+  mutate(GammaPeakDepthpV=ifelse(GammaPeakDepthPValue<0.001,"***",ifelse(GammaPeakDepthPValue<0.01,"**",ifelse(GammaPeakDepthPValue<0.05,"*",ifelse(GammaPeakDepthPValue<0.1,".","NA")))))%>%
+  
+  
+  mutate(GammaPeakRichnessTrend=ifelse(Model$GammaPeakRichnessSlope>0,"+",ifelse(Model$GammaPeakRichnessSlope<0,"-","0")))%>%
+  mutate(GammaPeakRichnesspV=ifelse(GammaPeakRichnessPValue<0.001,"***",ifelse(GammaPeakRichnessPValue<0.01,"**",ifelse(GammaPeakRichnessPValue<0.05,"*",ifelse(GammaPeakRichnessPValue<0.1,".","NA")))))
+
+
+ModelTshort<-ModelT[c(1,16:29)] %>% 
+  tidyr::unite(GammaLM, c("GammaTrend", "GammapV"))%>% 
+  tidyr::unite(AlphaPeakDepthLM, c("AlphaPeakDepthTrend", "AlphaPeakDepthpV"))%>% 
+  tidyr::unite(AlphaPeakRichnessLM, c("AlphaPeakRichnessTrend", "AlphaPeakRichnesspV"))%>% 
+  tidyr::unite(BetaPeakDepthLM, c("BetaPeakDepthTrend", "BetaPeakDepthpV"))%>% 
+  tidyr::unite(BetaPeakRichnessLM, c("BetaPeakRichnessTrend", "BetaPeakRichnesspV"))%>% 
+  tidyr::unite(GammaPeakDepthLM, c("GammaPeakDepthTrend", "GammaPeakDepthpV"))%>% 
+  tidyr::unite(GammaPeakRichnessLM, c("GammaPeakRichnessTrend", "GammaPeakRichnesspV"))
+
+
+ModelTshort
+```
+
+```{r}
+LAKECHANGE<-PEAK%>% dplyr::group_by(Lake) %>% 
+  summarise(NYEAR=n_distinct(YEAR),
+            #AlphaPeakDepthMax=max(AlphaPeakDepth),AlphaPeakDepthMin=min(AlphaPeakDepth),
+            AlphaPeakDepthmean=mean(AlphaPeakDepth),AlphaPeakDepthRange=max(AlphaPeakDepth)-min(AlphaPeakDepth), #AlphaPeakDepthsd=sd(AlphaPeakDepth),
+            AlphaPeakRichnessnmean=mean(AlphaPeakRichness),AlphaPeakRichnessRange=max(AlphaPeakRichness)-min(AlphaPeakRichness),#AlphaPeakRichnessnsd=sd(AlphaPeakRichness)
+            BetaPeakDepthmean=mean(BetaPeakDepth),BetaPeakDepthRange=max(BetaPeakDepth)-min(BetaPeakDepth), #BetaPeakDepthsd=sd(BetaPeakDepth),
+            BetaPeakRichnessnmean=mean(BetaPeakRichness),BetaPeakRichnessRange=max(BetaPeakRichness)-min(BetaPeakRichness),#BetaPeakRichnessnsd=sd(BetaPeakRichness)
+            GammaPeakDepthmean=mean(GammaPeakDepth),GammaPeakDepthRange=max(GammaPeakDepth)-min(GammaPeakDepth), #GammaPeakDepthsd=sd(GammaPeakDepth),
+            GammaPeakRichnessnmean=mean(GammaPeakRichness),GammaPeakRichnessRange=max(GammaPeakRichness)-min(GammaPeakRichness)#GammaPeakRichnessnsd=sd(GammaPeakRichness)
+            )%>%
+  filter(NYEAR>3)
+
+LAKECHANGE2<-LAKECHANGE %>% 
+  mutate(APeakDepthRangeClass=ifelse(AlphaPeakDepthRange<1,"0-1m",ifelse(AlphaPeakDepthRange<2,"1-2m",ifelse(AlphaPeakDepthRange<3,"2-3m",
+                              ifelse(AlphaPeakDepthRange<4,"3-4m",ifelse(AlphaPeakDepthRange<5,"4-5m",99))))),
+         BPeakDepthRangeClass=ifelse(BetaPeakDepthRange<1,"0-1m",ifelse(BetaPeakDepthRange<2,"1-2m",ifelse(BetaPeakDepthRange<3,"2-3m",
+                              ifelse(BetaPeakDepthRange<4,"3-4m",ifelse(BetaPeakDepthRange<5,"4-5m",99))))),
+         GPeakDepthRangeClass=ifelse(GammaPeakDepthRange<1,"0-1m",ifelse(GammaPeakDepthRange<2,"1-2m",ifelse(GammaPeakDepthRange<3,"2-3m",
+                              ifelse(GammaPeakDepthRange<4,"3-4m",ifelse(GammaPeakDepthRange<5,"4-5m",99))))))
+
+AA<-LAKECHANGE2%>%group_by(APeakDepthRangeClass)%>%summarise(AlphaPeakDepthRange=n_distinct(Lake))%>%rename(PeakDepthRangeClass=APeakDepthRangeClass)
+BA<-LAKECHANGE2%>%group_by(BPeakDepthRangeClass)%>%summarise(BetaPeakDepthRange=n_distinct(Lake))%>%rename(PeakDepthRangeClass=BPeakDepthRangeClass)
+GA<-LAKECHANGE2%>%group_by(GPeakDepthRangeClass)%>%summarise(GammaPeakDepthRange=n_distinct(Lake))%>%rename(PeakDepthRangeClass=GPeakDepthRangeClass)
+
+AB<-full_join(AA,BA,by=c("PeakDepthRangeClass"))
+ABG<-full_join(AB,GA,by=c("PeakDepthRangeClass"))
+ABGs<-ABG %>% tidyr::gather("Type", "Nlakes", -PeakDepthRangeClass)
+
+positions <- c("GammaPeakDepthRange","BetaPeakDepthRange", "AlphaPeakDepthRange" )
+ggplot(ABGs,aes(x=(Type),y=Nlakes,fill=PeakDepthRangeClass))+
+  #geom_bar(stat="identity") + 
+  geom_col(position = position_stack(reverse = TRUE))+
+  xlab("")+ylab("Lakes (N)")+
+  #theme(axis.text.x = element_text(angle = 90, hjust = 1))+ 
+  coord_flip()+ 
+  scale_x_discrete(limits = positions)
 ```
 
