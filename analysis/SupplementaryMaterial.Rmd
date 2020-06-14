@@ -1,0 +1,182 @@
+---
+title: "SupplementaryMaterial"
+author: "Anne Lew"
+date: "14 Juni 2020"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+```
+
+```{r load-packages, include=FALSE}
+#Load packages
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(knitr)
+library(MacrophytesDDG)
+library(ggpubr)
+library(corrplot)
+
+```
+
+
+
+```{r DDG, echo=FALSE}
+### ALPHA & Peak Plot
+ggplot(data=Makroph_Lake_DepthS, aes(x=(Tiefe), y=ALPHA, col=factor(YEAR), group=interaction(Lake,YEAR)))+ 
+  geom_line(aes(linetype=datasettot))+#interaction(dataset,datasetWLF)
+  facet_wrap(~ Lake, ncol=7)+
+  ylab("Alpha richness")+ xlab("")+labs(fill = "Pattern type")+ylim(0,15)+
+  geom_errorbar(data=Makroph_Lake_DepthS,aes(ymin=ALPHA-ALPHAsd, ymax=ALPHA+ALPHAsd), width=.1)+
+  geom_point(data=PEAK, aes(x=(AlphaPeakDepth), y=AlphaPeakRichness, shape=datasettot))+ scale_x_reverse()
+### BETA & Peak Plot
+ggplot(Makroph_Lake_DepthS, aes(x=Tiefe, y=BETA, group=interaction(Lake,YEAR), col=factor(YEAR), linetype=datasettot))+ 
+  geom_line()+facet_wrap(~ Lake, ncol=10)+
+  ylab("Beta richness")+ xlab("Depth (m)")+labs(fill = "Pattern type")+
+  geom_point(data=PEAK, aes(x=BetaPeakDepth, y=BetaPeakRichness, shape=datasettot))+ scale_x_reverse()
+### GAMMA & Peak Plot
+ggplot(Makroph_Lake_DepthS, aes(x=Tiefe, y=GAMMA, group=interaction(Lake,YEAR), col=factor(YEAR), linetype=datasettot))+ 
+  geom_line()+facet_wrap(~ Lake, ncol=10)+
+  ylab("Gamma richness")+ xlab("Depth (m)")+labs(fill = "Pattern type")+
+  geom_point(data=PEAK, aes(x=GammaPeakDepth, y=GammaPeakRichness, shape=datasettot))+ scale_x_reverse()
+
+```
+
+## Correlations | Drivers
+
+```{r, fig.width=14, fig.height=12, echo=FALSE}
+corrplot(cor(PEAK_Chem_norm[c(3:16,19)], use="complete.obs"), type = "upper", method = "number", insig = "blank")
+corrplot(cor(PEAK_Chem_norm[c(20,22,27,28,29,30,3:16,19)], use="complete.obs"), type = "upper", method = "number", insig = "blank")
+plot(PEAK_Chem_norm$GAMMA,PEAK_Chem_norm$Area_ha)
+plot(PEAK_Chem_norm$GammaPeakRichness,PEAK_Chem_norm$Area_ha)
+```
+
+
+
+
+
+
+## Temporal change
+
+
+```{r Temporal plots, echo=FALSE, fig.height=13, fig.width=10, message=FALSE, warning=FALSE}
+library(ggpmisc)
+
+T0<-ggplot(PEAK_LAKE_ALL%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=GAMMA, group=factor(Lake))) +
+  xlab("")+ylab("GAMMA richness")+theme(axis.text.x = element_text(angle = 90, hjust = 1))+ 
+  geom_point(alpha = 0.3) +facet_wrap(vars(Lake),nrow=3) +
+  geom_smooth(method = "lm", se = F) +
+  stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "left", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3)+
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")),
+                  label.x = 'left', label.y = 0.35, size = 3)
+
+
+
+T1<-ggplot(PEAK_LAKE_ALL%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=AlphaPeakDepth, group=factor(Lake)))+
+  xlab("")+ylab("AlphaPeakDepth")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+ 
+  geom_point(alpha = 0.3) +facet_wrap(vars(Lake),nrow=3) +
+  geom_smooth(method = "lm", se = F) +
+  stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "left", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3)+
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")),
+                  label.x = 'left', label.y = -3.8, size = 3)
+
+
+
+T2<-ggplot(PEAK_LAKE_ALL%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=AlphaPeakRichness, group=factor(Lake)))+
+  xlab("")+ylab("AlphaPeakRichness")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+ 
+  geom_point(alpha = 0.3) +facet_wrap(vars(Lake),nrow=3) +
+  geom_smooth(method = "lm", se = F) +
+  stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "left", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3)+
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")),
+                  label.x = 'left', label.y = -3.8, size = 3)
+
+ggarrange(T1,T2, nrow=2)
+```
+
+
+
+
+
+
+```{r Tempral plots, echo=FALSE, fig.height=13, fig.width=10, message=FALSE, warning=FALSE}
+T3<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=BetaPeakDepth, group=factor(Lake)))+
+  xlab("")+ylab("BetaPeakDepth")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+ 
+  geom_point(alpha = 0.3) +facet_wrap(vars(Lake),nrow=3) +
+  geom_smooth(method = "lm", se = F) +
+  stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "left", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3)+
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")),
+                  label.x = 'left', label.y = -3.8, size = 3)
+
+T4<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=BetaPeakRichness, group=factor(Lake)))+
+  xlab("")+ylab("BetaPeakRichness")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+ 
+  geom_point(alpha = 0.3) +facet_wrap(vars(Lake),nrow=3) +
+  geom_smooth(method = "lm", se = F) +
+  stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "left", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3)+
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")),
+                  label.x = 'left', label.y = -3.8, size = 3)
+
+ggarrange(T3,T4, nrow=2)
+
+T5<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=GammaPeakDepth, group=factor(Lake)))+
+  xlab("")+ylab("GammaPeakDepth")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+ 
+  geom_point(alpha = 0.3) +facet_wrap(vars(Lake),nrow=3) +
+  geom_smooth(method = "lm", se = F) +
+  stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "left", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3)+
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")),
+                  label.x = 'left', label.y = -3.8, size = 3)
+
+T6<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=GammaPeakRichness, group=factor(Lake)))+
+  xlab("")+ylab("GammaPeakRichness")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+ 
+  geom_point(alpha = 0.3) +facet_wrap(vars(Lake),nrow=3) +
+  geom_smooth(method = "lm", se = F) +
+  stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "left", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3)+
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")),
+                  label.x = 'left', label.y = -3.8, size = 3)
+
+ggarrange(T5,T6, nrow=2)
+```
