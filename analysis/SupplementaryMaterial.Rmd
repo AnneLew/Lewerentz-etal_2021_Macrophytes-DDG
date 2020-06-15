@@ -1,6 +1,6 @@
 ---
 title: "SupplementaryMaterial"
-author: "Anne Lew"
+author: "Anne Lewerentz, Juliano Cabral"
 date: "14 Juni 2020"
 output:
   word_document: default
@@ -23,9 +23,9 @@ library(corrplot)
 
 ```
 
+## Depth diversity gradients of macrophytes - overview
 
-
-```{r DDG, echo=FALSE}
+```{r DDG, echo=FALSE, fig.height=8, fig.width=15}
 ### ALPHA & Peak Plot
 ggplot(data=Makroph_Lake_DepthS, aes(x=(Tiefe), y=ALPHA, col=factor(YEAR), group=interaction(Lake,YEAR)))+ 
   geom_line(aes(linetype=datasettot))+#interaction(dataset,datasetWLF)
@@ -47,15 +47,48 @@ ggplot(Makroph_Lake_DepthS, aes(x=Tiefe, y=GAMMA, group=interaction(Lake,YEAR), 
 ```
 
 ## Correlations | Drivers
+Normalized chemical-physical values
 
 ```{r, fig.width=14, fig.height=12, echo=FALSE}
-corrplot(cor(PEAK_Chem_norm[c(3:16,19)], use="complete.obs"), type = "upper", method = "number", insig = "blank")
+#corrplot(cor(PEAK_Chem_norm[c(3:16,19)], use="complete.obs"), type = "upper", method = "number", insig = "blank")
 corrplot(cor(PEAK_Chem_norm[c(20,22,27,28,29,30,3:16,19)], use="complete.obs"), type = "upper", method = "number", insig = "blank")
-plot(PEAK_Chem_norm$GAMMA,PEAK_Chem_norm$Area_ha)
-plot(PEAK_Chem_norm$GammaPeakRichness,PEAK_Chem_norm$Area_ha)
 ```
 
 
+## Driver
+```{r}
+library(ggbiplot)
+
+label_lake<- PEAK_Chem_norm[complete.cases(PEAK_Chem_norm[,c(3:16,19)]),] #LEVEL 3 data #19 #
+lak.pca <- prcomp(na.omit(label_lake[,c(3:16,19)]),center = TRUE, scale. = TRUE)
+#print(lak.pca)
+#plot(lak.pca, type="l")
+#summary(lak.pca) 
+
+p1<- ggbiplot(lak.pca, choices = 1:2, obs.scale = 1, var.scale = 1,labels=label_lake$Lake, arrow.color = "#FF0000",
+         #groups = group_lake_withoutSAK, 
+         ellipse = TRUE, cicle = TRUE) #+ xlim(-4,4) +ylim(-4,4)
+p2<- ggbiplot(lak.pca, choices = 3:4, obs.scale = 1, var.scale = 1,labels=label_lake$Lake, arrow.color = "#FF0000",
+         #groups = group_lake_withoutSAK, 
+         ellipse = TRUE, cicle = TRUE) #+ xlim(-4,4) +ylim(-4,4)
+figure <- ggarrange(p1,p2,
+                    #widths = c(2.3,2),heights = c(1.1,1,1,1.2),
+                    labels = c("A","B"),
+                    #label.x = c(0.18,0,0.18,0,0.18,0,0.18,0),label.y = c(0.8,0.8,1,1,1,1,1,1),
+                    ncol = 2, nrow = 1, common.legend = TRUE, legend = "bottom", align = "hv")
+figure
+
+PCA <- (data.frame(label_lake$Lake))
+PCA$YEAR <- label_lake$YEAR
+PCA$Morph_PC1 <- lak.pca$x[,1]
+PCA$Morph_PC2 <- lak.pca$x[,2]
+PCA$Morph_PC3 <- lak.pca$x[,3]
+PCA$Morph_PC4 <- lak.pca$x[,4]
+PCA$Morph_PC5 <- lak.pca$x[,5]
+names(PCA)[1]<-"Lake"
+
+
+```
 
 
 
