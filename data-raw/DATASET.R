@@ -10,16 +10,16 @@ library(tidyverse)
 library(ggplot2)
 library(lubridate)
 library(stringr)
-
-
+#library(h2o)
 
 
 ##########################################################################################
 ##########################################################################################
 ###################################   ABIOTIC DATA   ######################################
+### Production of mean annual values for selected physical chemical measurements ###
 ##########################################################################################
 ##########################################################################################
-
+## Load data
 setwd("./data-raw/abiotic")
 chem <- list.files(pattern="*.csv")
 chem.names <- paste("Chem", strtrim(chem, 4), sep="")
@@ -35,8 +35,7 @@ for (i in chem) {
   names(dat) <- names(lakes)
   lakes <- rbind(lakes, dat)
 }
-#colnames(lakes)[1] <- "categories"
-#colnames(lakes)[2] <- "data"
+
 lakes <- subset(lakes, subset = lakes$categories %in% c("Gewässer:","Gew?sser:","Messstellen-Nr.:","Messstellen-Name:"))
 
 lak=lakes[1:3,]
@@ -46,6 +45,8 @@ for (i in 2:length(chem.names)){
 lake <- t(lak)
 
 lake <- lake[2:55,] #!
+
+## Rename colnames
 colnames(lake)[colnames(lake)=="3"] <- "Messstellen-Name"
 colnames(lake)[colnames(lake)=="4"] <- "Messstellen-Nr"
 colnames(lake)[colnames(lake)=="5"] <- "Gewaesser"
@@ -53,17 +54,20 @@ rownames(lake) <- c(1:54)
 lake <- lake[,c(3,2,1)]
 lake.names <- lake[,1]
 
-names0 <- names(Chem2138)
-for (i in chem.names){
-  names0 <- intersect(names0, names(eval(as.name(i))))
-  print(names0)
-}
+## Automatd selection of variables
+# names0 <- names(Chem2138)
+# for (i in chem.names){
+#   names0 <- intersect(names0, names(eval(as.name(i))))
+#   print(names0)
+# }
 
 # Chem.Attributes <- names0[2:75]
 #Chem.Attributes[75]<-"SPAK.254.nm..1.m...0.0.m.Tiefe."
 #Chem.Attributes[88]<-"Phaeopig..?g.l...0.0.m.Tiefe."
 #Chem.Attributes[76]<-"Chloroph..?g.l...0.0.m.Tiefe."
 
+
+# Manual Selection of Datasets of variables
 Chem.Attributes <- c("NO3.N..mg.l...0.0.m.Tiefe.","SiO2..mg.l...0.0.m.Tiefe.","P.ges...mg.l...0.0.m.Tiefe.",
                      "O2.gel.f6.st..mg.l...0.0.m.Tiefe.","NH4.N..mg.l...0.0.m.Tiefe.","pH.Wert..vor.Ort.......0.0.m.Tiefe.",
                      "Wassertemp..vor.Ort....U.00B0.C...0.0.m.Tiefe.","LF..20..U.00B0.C..vor.Ort...U.00B5.S.cm...0.0.m.Tiefe.",
@@ -118,16 +122,16 @@ dimnames(Chem.Mean.Year)[[1]] <- lake.names
 Chem.Mean.YearDF <- as.data.frame.table(Chem.Mean.Year, responseName = "value")
 Chem.Mean.YearDF <- subset(Chem.Mean.YearDF, !is.na(Chem.Mean.YearDF$value))
 
+# Save data
 setwd("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/2_DDGasPackage/MacrophytesDDG")
-
 usethis::use_data(Chem.Mean.YearDF, overwrite = TRUE)
-
 
 
 
 ##########################################################################################
 ##########################################################################################
 ###################################   BIOTIC DATA   ######################################
+### Community table for submerged macrophytes ###
 ##########################################################################################
 ##########################################################################################
 
@@ -135,7 +139,7 @@ usethis::use_data(Chem.Mean.YearDF, overwrite = TRUE)
 setwd("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/2_DDGasPackage/MacrophytesDDG")
 
 ## Load data
-Makroph <- read.csv("./rawdata/Makrophyten_WRRL_05-17_nurMakrophytes.csv", header=TRUE, sep=";")
+Makroph <- read.csv("./data-raw/Makrophyten_WRRL_05-17_nurMakrophytes.csv", header=TRUE, sep=";")
 
 #Filter for unplausible datasets
 Makroph <- Makroph %>%
@@ -148,7 +152,9 @@ Makroph <- Makroph %>%
   #subset(!(Gewässer %in% c("Rottachsee", "Seehamer See", "Walchensee"))) %>% ###beide sind keine nat?rlichen Seen, Walchensee hat keine nat?rl Dynamik
   distinct()
 
-Makroph$Probestelle <- revalue(Makroph$Probestelle, c("0-1 m"="0-1", "1-2 m"="1-2", "2-4 m"="2-4",">4 m"="4-x" ))
+
+# Rename values of depth
+Makroph$Probestelle <- plyr::revalue(Makroph$Probestelle, c("0-1 m"="0-1", "1-2 m"="1-2", "2-4 m"="2-4",">4 m"="4-x" ))
 
 ## Selection of species that were determined until species level
 Makroph <- Makroph %>%
@@ -173,7 +179,7 @@ Makroph_comm_S2 <- Makroph %>% group_by(Gewässer, MST_NR, DATUM, Probestelle, T
   select_if(~sum(!is.na(.)) > 0)
 
 Makroph_comm_S <-  right_join(Makroph_comm_S2, Makroph_dataset, by=c("Gewässer", "MST_NR", "YEAR", "Probestelle"))
-Makroph_comm_S$Tiefe <- revalue(Makroph_comm_S$Probestelle, c("0-1"="-0.5", "1-2"="-1.5", "2-4"="-3","4-x"="-5"))
+Makroph_comm_S$Tiefe <- plyr::revalue(Makroph_comm_S$Probestelle, c("0-1"="-0.5", "1-2"="-1.5", "2-4"="-3","4-x"="-5"))
 Makroph_comm_S<-Makroph_comm_S%>%mutate(Tiefe=as.numeric(Tiefe))
 
 usethis::use_data(Makroph_comm_S, overwrite = TRUE)

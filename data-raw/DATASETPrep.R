@@ -91,6 +91,10 @@ DATASET$dataset[is.na(DATASET$dataset)]<-"NoChem"
 DATASET$datasetWLF[is.na(DATASET$datasetWLF)]<-"NoChem"
 DATASET$datasettot[DATASET$dataset=="NoChem"]<-"LEVEL1"
 
+DATASET$datasettotsimpl<- DATASET$datasettot
+
+DATASET<-DATASET %>%
+  mutate(datasettotsimpl=ifelse(datasettot=="LEVEL1","Biotic+Abiotic",ifelse(datasettot=="LEVEL2","Biotic",ifelse(datasettot=="LEVEL3","Biotic","NA"))))
 
 MakrophS_ALL<-merge(MakrophS_ALL, DATASET, by=c("Lake", "YEAR")) #Add dataset information to Macrophyte table
 Makroph_Lake_ALL<-merge(Makroph_Lake_ALL, DATASET, by=c("Lake", "YEAR")) #Add dataset information to Macrophyte lakes table
@@ -112,8 +116,8 @@ PEAK_LAKE_Chem <- merge(PEAK_LAKE_ALL, Makroph_Lake_ALL[c(1,2,100,101,102)], by=
 
 PEAK_LAKE_ALL$AlphaPeakDepth_sc <- scale(PEAK_LAKE_ALL$AlphaPeakDepth)[,1]
 PEAK_LAKE_ALL$AlphaPeakRichness_sc <- scale(PEAK_LAKE_ALL$AlphaPeakRichness)[,1]
-histogram(PEAK_LAKE_ALL$AlphaPeakDepth_sc)
-histogram(PEAK_LAKE_ALL$AlphaPeakRichness_sc)
+#histogram(PEAK_LAKE_ALL$AlphaPeakDepth_sc)
+#histogram(PEAK_LAKE_ALL$AlphaPeakRichness_sc)
 
 PEAK_LAKE_ALL<-merge(PEAK_LAKE_ALL, DATASET, by=c("Lake", "YEAR")) #Add dataset information to Peak table
 

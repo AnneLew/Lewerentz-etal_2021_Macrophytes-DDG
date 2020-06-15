@@ -1,9 +1,9 @@
 ---
-title: "SupplementaryMaterial"
+title: "Supplementary Material"
 author: "Anne Lewerentz, Juliano Cabral"
 date: "14 Juni 2020"
 output:
-  word_document: default
+  #word_document: default
   html_document: default
 ---
 
@@ -19,11 +19,13 @@ library(magrittr)
 library(knitr)
 library(MacrophytesDDG)
 library(ggpubr)
-library(corrplot)
+#library(corrplot)
 
 ```
 
 ## Depth diversity gradients of macrophytes - overview
+
+Depth pattern of Alpha, Beta and Gamma Richness for full dataset. Lines show the mean Alpha Richness per lake (boxes) and year with their corresponding standard deviation; the single RichnessPeaks are depicted as points. The different dataset levels can be distinguished by line type and point shape: Points and solid line=LEVEL1; triangles and dotted line=LEVEL2; squares and broken line=LEVEL3 
 
 ```{r DDG, echo=FALSE, fig.height=8, fig.width=15}
 ### ALPHA & Peak Plot
@@ -46,16 +48,44 @@ ggplot(Makroph_Lake_DepthS, aes(x=Tiefe, y=GAMMA, group=interaction(Lake,YEAR), 
 
 ```
 
+
+Correlations between metrices
+
+
+
+
+
+
+
+
 ## Correlations | Drivers
 Normalized chemical-physical values
 
 ```{r, fig.width=14, fig.height=12, echo=FALSE}
 #corrplot(cor(PEAK_Chem_norm[c(3:16,19)], use="complete.obs"), type = "upper", method = "number", insig = "blank")
-corrplot(cor(PEAK_Chem_norm[c(20,22,27,28,29,30,3:16,19)], use="complete.obs"), type = "upper", method = "number", insig = "blank")
+#library(Hmisc)
+#library("PerformanceAnalytics")
+#detach(ggpmisc)
+library(GGally)
+#corrplot(cor(PEAK_Chem_norm[c(24,20,22,27,28,29,30,3:16,19)], use="complete.obs"), type = "upper", method = "number", insig = "blank")
+#chart.Correlation(PEAK_Chem_norm[c(24,20,22,27,28,29,30,3:16,19)], histogram=TRUE, pch=19)
+
+ggcorr(PEAK_Chem_norm[c(3:16,19,30,29,28,27,22,20,24)], geom = "blank", label = TRUE, hjust = 0.75) +
+  geom_point(size = 10, aes(color = coefficient > 0, alpha = abs(coefficient) > 0.5)) +
+  scale_alpha_manual(values = c("TRUE" = 0.25, "FALSE" = 0)) +
+  guides(color = FALSE, alpha = FALSE)
+
 ```
 
 
 ## Driver
+
+Test for representativity of small dataset for medium dataset
+
+
+
+
+
 ```{r}
 library(ggbiplot)
 
@@ -95,11 +125,14 @@ names(PCA)[1]<-"Lake"
 
 ## Temporal change
 
+MISSING: Temporal plot just gamma
+Temporal plot chemical values
+
 
 ```{r Temporal plots, echo=FALSE, fig.height=13, fig.width=10, message=FALSE, warning=FALSE}
 library(ggpmisc)
 
-T0<-ggplot(PEAK_LAKE_ALL%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=GAMMA, group=factor(Lake))) +
+T0<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=GAMMA, group=factor(Lake))) +
   xlab("")+ylab("GAMMA richness")+theme(axis.text.x = element_text(angle = 90, hjust = 1))+ 
   geom_point(alpha = 0.3) +facet_wrap(vars(Lake),nrow=3) +
   geom_smooth(method = "lm", se = F) +
@@ -114,7 +147,7 @@ T0<-ggplot(PEAK_LAKE_ALL%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=fa
 
 
 
-T1<-ggplot(PEAK_LAKE_ALL%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=AlphaPeakDepth, group=factor(Lake)))+
+T1<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=AlphaPeakDepth, group=factor(Lake)))+
   xlab("")+ylab("AlphaPeakDepth")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))+ 
   geom_point(alpha = 0.3) +facet_wrap(vars(Lake),nrow=3) +
@@ -130,7 +163,7 @@ T1<-ggplot(PEAK_LAKE_ALL%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=fa
 
 
 
-T2<-ggplot(PEAK_LAKE_ALL%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=AlphaPeakRichness, group=factor(Lake)))+
+T2<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=AlphaPeakRichness, group=factor(Lake)))+
   xlab("")+ylab("AlphaPeakRichness")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))+ 
   geom_point(alpha = 0.3) +facet_wrap(vars(Lake),nrow=3) +

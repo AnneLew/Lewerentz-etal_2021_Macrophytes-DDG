@@ -34,15 +34,15 @@ complete<-MakrophS_ALL %>%
 Level1<-MakrophS_ALL %>% filter(datasettot=="LEVEL3") %>% #group_by(datasettot) %>% 
   dplyr::summarise(N = n_distinct(Lake,YEAR),Lakes_N = n_distinct(Lake),Transects_N = n_distinct(MST_NR),Depths_N = n_distinct(Probestelle),Years_N = n_distinct(YEAR))
 
-Level2_3<-MakrophS_ALL %>% filter(datasettot=="LEVEL3"|datasettot=="LEVEL2") %>% 
-  dplyr::summarise(N = n_distinct(Lake,YEAR),Lakes_N = n_distinct(Lake),Transects_N = n_distinct(MST_NR),Depths_N = n_distinct(Probestelle),Years_N = n_distinct(YEAR))
+# Level2_3<-MakrophS_ALL %>% filter(datasettot=="LEVEL3"|datasettot=="LEVEL2") %>% 
+#   dplyr::summarise(N = n_distinct(Lake,YEAR),Lakes_N = n_distinct(Lake),Transects_N = n_distinct(MST_NR),Depths_N = n_distinct(Probestelle),Years_N = n_distinct(YEAR))
 
 Level_Timeseries<-MakrophS_ALL %>% group_by(Lake)%>%filter(n_distinct(YEAR)>3)%>% ungroup() %>%
   dplyr::summarise(N = n_distinct(Lake,YEAR),Lakes_N = n_distinct(Lake),Transects_N = n_distinct(MST_NR),Depths_N = n_distinct(Probestelle),Years_N = n_distinct(YEAR))
 
 
-Level<- rbind(complete,Level1,Level2_3,Level_Timeseries)
-Level$dataset<-c("Full dataset","Level1", "Level2+3", "Timeseries")
+Level<- rbind(complete,Level1,Level_Timeseries)
+Level$dataset<-c("Biotic","Biotic+Abiotic", "Timeseries")
 Level[,c(6,1,2,3,4,5)]
 ```
 
@@ -105,15 +105,15 @@ transpose(left_join(left_join(PEAKCLASSAlpha,PEAKCLASSBeta, by="DepthGroup"),PEA
 
 ```{r Peak plots, echo=FALSE}
 ## PEAK Plot
-PPalpha<-ggplot(PEAK, aes(y=AlphaPeakRichness, x=AlphaPeakDepth, col=datasettot))+
+PPalpha<-ggplot(PEAK, aes(y=AlphaPeakRichness, x=AlphaPeakDepth, col=datasettotsimpl))+
   geom_point()+# labs(col = "Pattern type")+
   xlab(expression(D[alpha][max](m)))+ylab(expression(R[alpha][max](N)))+
   theme(legend.position = c(0.9, 0.2))+ scale_x_reverse()
 
-PPbeta<-ggplot(PEAK, aes(x=BetaPeakDepth, y=BetaPeakRichness, col=datasettot))+geom_point()+ scale_x_reverse()+
+PPbeta<-ggplot(PEAK, aes(x=BetaPeakDepth, y=BetaPeakRichness, col=datasettotsimpl))+geom_point()+ scale_x_reverse()+
   xlab(expression(D[beta][max](m)))+ylab(expression(R[beta][max](N)))
 
-PPgamma<-ggplot(PEAK, aes(x=GammaPeakDepth, y=GammaPeakRichness, col=datasettot))+geom_point()+ scale_x_reverse()+
+PPgamma<-ggplot(PEAK, aes(x=GammaPeakDepth, y=GammaPeakRichness, col=datasettotsimpl))+geom_point()+ scale_x_reverse()+
   xlab(expression(D[gamma][max](m)))+ylab(expression(R[gamma][max](N)))
 
 ggarrange(PPalpha,PPbeta,PPgamma, ncol=3,common.legend = T, legend="bottom", labels="auto")
@@ -195,6 +195,8 @@ par(mfrow=c(1,1))
 par(mfrow=c(1,3))
 plot(gam_AlphaPeakDepth$gam,residuals=TRUE, main = expression(D[alpha][max]), shade = T,seWithMean=T)
 plot(gam_AlphaPeakRichness$gam,residuals=TRUE, main = expression(R[alpha][max]), shade = T,seWithMean=T)
+
+
 ```
 
 

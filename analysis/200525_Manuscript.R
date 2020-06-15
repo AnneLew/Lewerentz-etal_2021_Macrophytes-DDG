@@ -149,8 +149,8 @@ p_format <- function(x, ndp=3)
   ifelse(out=="0.000","<0.01", out)
 }
 
-corrplot(cor(PEAK[c(7,3,16,14,5,17,15)], use="complete.obs"), type = "upper")
-pval <- psych::corr.test(PEAK[c(7,3,16,14,5,17,15)], adjust="none")$p
+corrplot(cor(PEAK[c(7,3)], use="complete.obs"), type = "upper")
+pval <- psych::corr.test(PEAK[c(7,3)], adjust="none")$p
 pos <- expand.grid(1:ncol(pval), ncol(pval):1)
 text(pos, p_format(pval))
 corrplot(cor(PEAK[c(7,3,16,14,5,17,15)], use="complete.obs"), type="lower", add=T, tl.pos="d", cl.pos="n")
