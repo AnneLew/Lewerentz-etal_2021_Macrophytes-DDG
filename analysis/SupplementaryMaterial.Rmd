@@ -85,9 +85,7 @@ chart.Correlation(PEAK_Chem_norm[c(33,30,33,31,32,29,30,16,19,3:15)], histogram=
 #   scale_alpha_manual(values = c("TRUE" = 0.25, "FALSE" = 0)) +
 #   guides(color = FALSE, alpha = FALSE)
 
-library(corrr)
 
-PEAK_Chem_norm[c(33,20,22,31,32,29,30,16,19,3:15)] %>% correlate() %>% network_plot(min_cor=0.5)
 ```
 
 ## Environmental fitting

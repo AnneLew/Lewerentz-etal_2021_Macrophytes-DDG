@@ -23,7 +23,7 @@ library(magrittr)
 library(knitr)
 library(MacrophytesDDG)
 library(ggpubr)
-library(data.table)
+library(data.table) 
 #library(corrplot)
 library(kableExtra)
 library(knitr)
@@ -188,6 +188,19 @@ ggarrange(PPalpha,PPbeta,PPgamma, ncol=3,common.legend = T, legend="bottom", lab
 
 
 ## H2 Drivers
+
+
+### Correlations
+
+```{r, fig.width=14, fig.height=10, echo=FALSE}
+library(corrr)
+
+PEAK_Chem_norm[c(33,20,22,31,32,29,30,16,19,3:15)] %>% correlate() %>% network_plot(min_cor=0.5)
+```
+
+
+
+
 ### PCA
 
 
@@ -198,7 +211,7 @@ ggarrange(PPalpha,PPbeta,PPgamma, ncol=3,common.legend = T, legend="bottom", lab
 ################ PCA ###############################################
 library(ggbiplot)
 
-label_lake<- PEAK_Chem_norm[complete.cases(PEAK_Chem_norm[,c(3:16,19)]),] #LEVEL 3 data #19 #
+label_lake<- PEAK_Chem_norm[complete.cases(PEAK_Chem_norm[,c(3:16,19)]),] #LEVEL 3 data #[,c(3:16,19)] #[,c(8:10,12:16,19)]
 lak.pca <- prcomp(na.omit(label_lake[,c(3:16,19)]),center = TRUE, scale. = TRUE)
 #print(lak.pca)
 #plot(lak.pca, type="l")
@@ -246,18 +259,25 @@ axis4<-barplot(lak.pca$rotation[,5], main="PC5",yaxt='n',horiz = TRUE)
 
 ```{r GAMM, echo=FALSE,fig.height=3, fig.width=8}
 library(gamm4)
+# gam_AlphaPeakDepth <- gamm4((AlphaPeakDepth) ~ s(Morph_PC1)+s(Morph_PC3),
+#                             random= ~(1|Lake), # package gamm4
+#                             data=PEAK_PCA)
+
 gam_AlphaPeakDepth <- gamm4((AlphaPeakDepth) ~ s(Morph_PC2)+s(Morph_PC4),
                             random= ~(1|Lake), # package gamm4
                             data=PEAK_PCA)
 
 summary(gam_AlphaPeakDepth$gam)
 
+# gam_AlphaPeakRichness <- gamm4(AlphaPeakRichness ~ s(Morph_PC2)+s(Morph_PC4),
+#                                random= ~(1|Lake), # package gamm4
+#                                data=PEAK_PCA)
+
 gam_AlphaPeakRichness <- gamm4(AlphaPeakRichness ~ s(Morph_PC1),
                                random= ~(1|Lake), # package gamm4
                                data=PEAK_PCA)
 
 summary(gam_AlphaPeakRichness$gam)
-par(mfrow=c(1,1))
 
 
 par(mfrow=c(1,3))
