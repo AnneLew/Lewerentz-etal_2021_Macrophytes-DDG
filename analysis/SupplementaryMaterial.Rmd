@@ -1,6 +1,6 @@
 ---
 title: "DDG Analysis | Supplementary Material"
-author: "Anne Lewerentz, Juliano Cabral"
+author: "Anne Lewerentz, Juliano S. Cabral"
 date: "14 Juni 2020"
 output:
   #word_document: default
@@ -29,12 +29,14 @@ library(ggpubr)
 
 ```
 
+
+
 #H1 Pattern
 ## Depth diversity gradients of macrophytes - overview
 
-Depth pattern of Alpha, Beta and Gamma Richness for full dataset. Lines show the mean Alpha Richness per lake (boxes) and year with their corresponding standard deviation; the single RichnessPeaks are depicted as points. The different dataset levels can be distinguished by line type and point shape: Points and solid line=LEVEL1; triangles and dotted line=LEVEL2; squares and broken line=LEVEL3 
+Depth pattern of Alpha, Beta and Gamma Richness for full dataset. For Alpha Richness, lines show the mean Alpha Richness per lake and year with their corresponding standard deviation; the single Richness Peaks are depicted as points. The different dataset levels can be distinguished by line type and point shape: Points and dashed line=Biotic dataset of all available macrophyte mapping; triangles and solid line=subset of biotic dataset, where also abiotic data is available. 
 
-```{r DDG, echo=FALSE, fig.height=6, fig.width=12}
+```{r DDG, fig.height=6, fig.width=12}
 ### ALPHA & Peak Plot
 ggplot(data=Makroph_Lake_DepthS, aes(x=(Tiefe), y=ALPHA, col=factor(YEAR), group=interaction(Lake,YEAR)))+ 
   geom_line(aes(linetype=datasettotsimpl))+#interaction(dataset,datasetWLF)
@@ -42,25 +44,33 @@ ggplot(data=Makroph_Lake_DepthS, aes(x=(Tiefe), y=ALPHA, col=factor(YEAR), group
   facet_wrap(~ Lake, ncol=7)+
   ylab("Alpha richness")+ xlab("")+labs(fill = "Pattern type")+ylim(0,15)+
   geom_errorbar(data=Makroph_Lake_DepthS,aes(ymin=ALPHA-ALPHAsd, ymax=ALPHA+ALPHAsd), width=.1)+
-  geom_point(data=PEAK, aes(x=(AlphaPeakDepth), y=AlphaPeakRichness, shape=datasettotsimpl))+ scale_x_reverse()
+  geom_point(data=PEAK, aes(x=(AlphaPeakDepth), y=AlphaPeakRichness, shape=datasettotsimpl))+ scale_x_reverse()+
+    labs(linetype="Peak dataset type",shape="DDG dataset type", colour="Year")
 ### BETA & Peak Plot
 ggplot(Makroph_Lake_DepthS, aes(x=Tiefe, y=BETA, group=interaction(Lake,YEAR), col=factor(YEAR), linetype=datasettotsimpl))+ 
   geom_line()+facet_wrap(~ Lake, ncol=7)+
   scale_linetype_manual(values=c("dotted", "solid"))+
   ylab("Beta richness")+ xlab("Depth (m)")+labs(fill = "Pattern type")+
-  geom_point(data=PEAK, aes(x=BetaPeakDepth, y=BetaPeakRichness, shape=datasettotsimpl))+ scale_x_reverse()
+  geom_point(data=PEAK, aes(x=BetaPeakDepth, y=BetaPeakRichness, shape=datasettotsimpl))+ scale_x_reverse()+
+    labs(linetype="Peak dataset type",shape="DDG dataset type", colour="Year")
 ### GAMMA & Peak Plot
 ggplot(Makroph_Lake_DepthS, aes(x=Tiefe, y=GAMMA, group=interaction(Lake,YEAR), col=factor(YEAR), linetype=datasettotsimpl))+ 
   geom_line()+facet_wrap(~ Lake, ncol=7)+
   scale_linetype_manual(values=c("dotted", "solid"))+
   ylab("Gamma richness")+ xlab("Depth (m)")+labs(fill = "Pattern type")+
-  geom_point(data=PEAK, aes(x=GammaPeakDepth, y=GammaPeakRichness, shape=datasettotsimpl))+ scale_x_reverse()
+  geom_point(data=PEAK, aes(x=GammaPeakDepth, y=GammaPeakRichness, shape=datasettotsimpl))+ scale_x_reverse()+
+    labs(linetype="Peak dataset type",shape="DDG dataset type", colour="Year")
 
 ```
 
 
-Correlations between metrices
+## Correlations between metrices
 
+Correlations between diversity metrices #TODO Umbenennen! # Problem with greek letters
+```{r}
+library(PerformanceAnalytics)
+chart.Correlation(PEAK_Chem_norm[c(33,20,22,31,32,29,30)], histogram=F, pch=9, method = "pearson")
+```
 
 
 
@@ -69,31 +79,23 @@ Correlations between metrices
 
 #H2 Driver
 ## Correlations | Drivers
-Normalized chemical-physical values
+Correlation between normalized chemical-physical values (!Achtung Level2 Dataset) & Richness measures #TODO: umbenennen: Greek letters?
 
-```{r, fig.width=14, fig.height=10, echo=FALSE}
-#corrplot(cor(PEAK_Chem_norm[c(3:16,19)], use="complete.obs"), type = "upper", method = "number", insig = "blank")
-#library(Hmisc)
+```{r, fig.width=14, fig.height=10}
 library(PerformanceAnalytics)
-#detach(ggpmisc)
-#library(GGally)
-#corrplot(cor(PEAK_Chem_norm[c(24,20,22,27,28,29,30,3:16,19)], use="complete.obs"), type = "upper", method = "number", insig = "blank")
-chart.Correlation(PEAK_Chem_norm[c(33,30,33,31,32,29,30,16,19,3:15)], histogram=F, pch=9)
-
-# ggcorr(PEAK_Chem_norm[c(3:16,19,30,29,28,32,31,27,22,20,24,33)], geom = "blank", label = TRUE, hjust = 0.75) +
-#   geom_point(size = 10, aes(color = coefficient > 0, alpha = abs(coefficient) > 0.5)) +
-#   scale_alpha_manual(values = c("TRUE" = 0.25, "FALSE" = 0)) +
-#   guides(color = FALSE, alpha = FALSE)
-
+chart.Correlation(PEAK_Chem_norm[c(33,20,22,31,32,29,30,16,19,3:15)], histogram=F, pch=9, method = "pearson")
 
 ```
 
 ## Environmental fitting
+Als Ergänzende Analyse #TODO Umbenennen
+Environmental fitting for normalized abiotic data and scales DDG measures
+Dalphamax & Ralphamax
 ```{r,fig.height=5, fig.width=5}
 library(vegan)
 ord <- PEAK_Chem_norm[c(25,26)]
 vec.sp_Alpha<-envfit(ord, PEAK_Chem_norm[c(16,19,3:15)], permu = 999,na.rm = TRUE)#26:38,
-#vec.sp_Alpha
+vec.sp_Alpha
 vec.sp.df_Alpha<-as.data.frame(vec.sp_Alpha$vectors$arrows*sqrt(vec.sp_Alpha$vectors$r))
 vec.sp.df_Alpha$param<-rownames(vec.sp.df_Alpha)
 vec.sp.df_Alpha <- vec.sp.df_Alpha %>% filter(param %in% (c("Area_ha","WLF","Conduct","NH4N","NO3N","O2diss","Ptot","SiO2","Tempsd","Transp","SAC")))#"Temp_0_6_sd",
@@ -105,13 +107,17 @@ ggplot(PEAK_Chem_norm, aes(y=AlphaPeakDepth_sc, x=AlphaPeakRichness_sc))+
   coord_fixed()  + xlab("Ralphamax (scaled)")  + ylab("Dalphamax (scaled)")+
   theme(legend.position = c(0.9, 0.1))
 
+```
+Dbetamax & Rbetamax
+```{r,fig.height=5, fig.width=5}
+
 
 ord <- scale(PEAK_Chem_norm[c(31,32)])
 vec.sp_Beta<-envfit(ord, PEAK_Chem_norm[c(16,19,3:15)], permu = 999,na.rm = TRUE)#26:38,
-#vec.sp_Beta
+vec.sp_Beta
 vec.sp.df_Beta<-as.data.frame(vec.sp_Beta$vectors$arrows*sqrt(vec.sp_Beta$vectors$r))
 vec.sp.df_Beta$param<-rownames(vec.sp.df_Beta)
-vec.sp.df_Beta <- vec.sp.df_Beta %>% filter(param %in% (c("Area_ha","WLF")))#"Temp_0_6_sd",
+vec.sp.df_Beta <- vec.sp.df_Beta %>% filter(param %in% (c("Area_ha")))#"Temp_0_6_sd",
 ggplot(PEAK_Chem_norm, aes(y=scale(BetaPeakDepth), x=scale(BetaPeakRichness)))+
   geom_point(aes())+  theme(legend.title=element_blank())+#scale_fill_discrete(name = "Groups")+
   geom_segment(data=vec.sp.df_Beta,aes(y=0,yend=2*(BetaPeakDepth),x=0,xend=2*(BetaPeakRichness)),
@@ -120,9 +126,16 @@ ggplot(PEAK_Chem_norm, aes(y=scale(BetaPeakDepth), x=scale(BetaPeakRichness)))+
   coord_fixed()  + xlab("Rbetamax (scaled)")  + ylab("Dbetamax (scaled)")+
   theme(legend.position = c(0.9, 0.1))
 
+```
+
+
+
+Dgammamax & Rgammamax
+```{r,fig.height=5, fig.width=5}
+
 ord <- scale(PEAK_Chem_norm[c(29,30)])
 vec.sp_Gamma<-envfit(ord, PEAK_Chem_norm[c(16,19,3:15)], permu = 999,na.rm = TRUE)#26:38,
-#vec.sp_Gamma
+vec.sp_Gamma
 vec.sp.df_Gamma<-as.data.frame(vec.sp_Gamma$vectors$arrows*sqrt(vec.sp_Gamma$vectors$r))
 vec.sp.df_Gamma$param<-rownames(vec.sp.df_Gamma)
 vec.sp.df_Gamma <- vec.sp.df_Gamma %>% filter(param %in% (c("Area_ha","WLF","NH4N","NO3N","SAC")))#"Temp_0_6_sd",
@@ -133,20 +146,23 @@ ggplot(PEAK_Chem_norm, aes(y=scale(GammaPeakDepth), x=scale(GammaPeakRichness)))
   geom_text(data=vec.sp.df_Gamma,aes(y=2.3*(GammaPeakDepth),x=2.3*(GammaPeakRichness),label=param),size=5)+
   coord_fixed()  + xlab("Rgammamax (scaled)")  + ylab("Dgammamax (scaled)")+
   theme(legend.position = c(0.9, 0.1))
-
 ```
 
 
+## Represetitvity of small dataset
 
+Comparing the environmental data for the two dataset levels Level3 and Level2 with a permanova test shows that Level3 data (N=27) is highly significant (p<0.001) representative for full dataset.  
 
-## Missing
-
-Test for representativity of small dataset for medium dataset
-
-
+```{r}
+##TEST for Represantativity #Permanova
+adonis2(PEAK[,c(3,5)]~datasettotsimpl, data=PEAK, by = NULL) #ALPHAPEAK
+adonis2(PEAK[,c(14,15)]~datasettotsimpl, data=PEAK, by = NULL) #GammaPEAK
+#adonis2(PEAK[,c(16,17)]~datasettotsimpl, data=PEAK, by = NULL) #BetaPEAK
+```
+No significant inpluence of dataset type
 
 ## PCA
-
+PCA for all abiotic data. Multiple years for lakes
 ```{r}
 library(ggbiplot)
 
@@ -154,29 +170,25 @@ label_lake<- PEAK_Chem_norm[complete.cases(PEAK_Chem_norm[,c(3:16,19)]),] #LEVEL
 lak.pca <- prcomp(na.omit(label_lake[,c(3:16,19)]),center = TRUE, scale. = TRUE)
 #print(lak.pca)
 #plot(lak.pca, type="l")
-#summary(lak.pca) 
+summary(lak.pca) 
 
 p1<- ggbiplot(lak.pca, choices = 1:2, obs.scale = 1, var.scale = 1,labels=label_lake$Lake, arrow.color = "#FF0000",
-         #groups = group_lake_withoutSAK, 
-         ellipse = TRUE, cicle = TRUE) #+ xlim(-4,4) +ylim(-4,4)
+         ellipse = TRUE, cicle = TRUE)
 p2<- ggbiplot(lak.pca, choices = 3:4, obs.scale = 1, var.scale = 1,labels=label_lake$Lake, arrow.color = "#FF0000",
-         #groups = group_lake_withoutSAK, 
-         ellipse = TRUE, cicle = TRUE) #+ xlim(-4,4) +ylim(-4,4)
+         ellipse = TRUE, cicle = TRUE) 
 figure <- ggarrange(p1,p2,
-                    #widths = c(2.3,2),heights = c(1.1,1,1,1.2),
                     labels = c("A","B"),
-                    #label.x = c(0.18,0,0.18,0,0.18,0,0.18,0),label.y = c(0.8,0.8,1,1,1,1,1,1),
                     ncol = 2, nrow = 1, common.legend = TRUE, legend = "bottom", align = "hv")
 figure
 
-PCA <- (data.frame(label_lake$Lake))
-PCA$YEAR <- label_lake$YEAR
-PCA$Morph_PC1 <- lak.pca$x[,1]
-PCA$Morph_PC2 <- lak.pca$x[,2]
-PCA$Morph_PC3 <- lak.pca$x[,3]
-PCA$Morph_PC4 <- lak.pca$x[,4]
-PCA$Morph_PC5 <- lak.pca$x[,5]
-names(PCA)[1]<-"Lake"
+# PCA <- (data.frame(label_lake$Lake))
+# PCA$YEAR <- label_lake$YEAR
+# PCA$Morph_PC1 <- lak.pca$x[,1]
+# PCA$Morph_PC2 <- lak.pca$x[,2]
+# PCA$Morph_PC3 <- lak.pca$x[,3]
+# PCA$Morph_PC4 <- lak.pca$x[,4]
+# PCA$Morph_PC5 <- lak.pca$x[,5]
+# names(PCA)[1]<-"Lake"
 
 
 ```
@@ -184,11 +196,10 @@ names(PCA)[1]<-"Lake"
 
 
 #H3 Temporal change
-## Missing
-Temporal plot chemical values
 
 ## Gamma change
-```{r, echo=FALSE, fig.height=5, fig.width=12, message=FALSE, warning=FALSE}
+Temporal change of Gamma richness for Temporal change dataset
+```{r, fig.height=5, fig.width=12, message=FALSE, warning=FALSE}
 library(ggpmisc)
 ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=GAMMA, group=factor(Lake))) +
   xlab("")+ylab("GAMMA richness")+theme(axis.text.x = element_text(angle = 90, hjust = 1))+
@@ -207,7 +218,9 @@ ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y
 
 ## Peak change
 
-```{r Temporal plots, echo=FALSE, fig.height=10, fig.width=12, message=FALSE, warning=FALSE}
+Temporal change for Dalphamax and Ralphamax
+
+```{r Temporal plots, fig.height=10, fig.width=12, message=FALSE, warning=FALSE}
 library(ggpmisc)
 
 T1<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=AlphaPeakDepth, group=factor(Lake)))+
@@ -246,9 +259,9 @@ ggarrange(T1,T2, nrow=2)
 
 
 
+Temporal change for Dbetamax and Rbetamax
 
-
-```{r Tempral plots, echo=FALSE, fig.height=10, fig.width=12, message=FALSE, warning=FALSE}
+```{r Tempral plots, fig.height=10, fig.width=12, message=FALSE, warning=FALSE}
 T3<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=BetaPeakDepth, group=factor(Lake)))+
   xlab("")+ylab("BetaPeakDepth")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))+ 
@@ -279,6 +292,12 @@ T4<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR
 
 ggarrange(T3,T4, nrow=2)
 
+
+```
+
+
+Temporal change for Dgammamax and Rgammamax
+```{r, fig.height=10, fig.width=12, message=FALSE, warning=FALSE}
 T5<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=GammaPeakDepth, group=factor(Lake)))+
   xlab("")+ylab("GammaPeakDepth")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))+ 
@@ -309,7 +328,6 @@ T6<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR
 
 ggarrange(T5,T6, nrow=2)
 ```
-
 
 
 ## Abiotic change

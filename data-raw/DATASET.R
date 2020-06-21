@@ -118,7 +118,7 @@ setwd("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/2_DDGasPackage/Macroph
 
 ## Load data
 Makroph <- read.csv("./data-raw/Makrophyten_WRRL_05-17_nurMakrophytes.csv", header=TRUE, sep=";")
-
+unique(Makroph$Erscheinungsform)
 ## Filter for unplausible datasets
 Makroph <- Makroph %>%
   filter(!(Gewässer=="Chiemsee" & (YEAR==2011))) %>% filter(!(Gewässer=="Chiemsee" & YEAR==2012)) %>% # 1 plot per year -> wrong

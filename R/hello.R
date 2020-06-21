@@ -13,6 +13,13 @@
 #   Check Package:             'Ctrl + Shift + E'
 #   Test Package:              'Ctrl + Shift + T'
 
+#' Title
+#' @title Say hi to Anne
+#' @return
+#' @export
+#'
+#' @examples
+#' hello()
 hello <- function() {
   print("Hallo Anne!")
 }

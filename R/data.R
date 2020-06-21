@@ -1,6 +1,7 @@
 #' Physical Chemical Data for Bavarian Lakes
 #'
-#' A dataset containing annual means of physical chemical measurements for Bavarian lakes.
+#' A dataset containing annual means of physical chemical measurements
+#' for Bavarian lakes.
 #' Data were prepaired in "DATASET.R"
 #'
 #' @format A data frame with 53940 rows and 4 variables:
