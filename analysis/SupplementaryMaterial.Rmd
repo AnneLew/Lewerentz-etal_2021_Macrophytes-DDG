@@ -3,7 +3,7 @@ title: "DDG Analysis | Supplementary Material"
 author: "Anne Lewerentz, Juliano S. Cabral"
 date: "14 Juni 2020"
 output:
-  #word_document: default
+  word_document: default
   html_document:
     toc: true
     number_sections: true
