@@ -159,4 +159,5 @@ Makroph_comm_S<-Makroph_comm_S%>%mutate(Tiefe=as.numeric(Tiefe))
 
 ## Save data
 usethis::use_data(Makroph_comm_S, overwrite = TRUE)
+usethis::use_data(Makroph, overwrite = TRUE)
 

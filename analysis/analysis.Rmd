@@ -6,6 +6,7 @@ output:
   html_document:
     toc: true
     number_sections: true
+    self_contained: false
     #fig_caption: true
     df_print: paged
     code_folding: hide
@@ -17,6 +18,7 @@ knitr::opts_chunk$set(echo = T, message=FALSE, warning=FALSE, dpi=300)
 
 ```{r load-packages, include=FALSE}
 #Load packages
+library(tidyverse)
 library(dplyr)
 library(ggplot2)
 library(magrittr)
@@ -26,7 +28,6 @@ library(ggpubr)
 library(data.table) 
 library(kableExtra)
 library(knitr)
-library(corrr)
 library(vegan)
 library(gamm4)
 
@@ -35,45 +36,47 @@ source("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/3_WFD-Project/02_Them
 
 ```
 
-# Introduction
+# Material & methods
 ## Data overview
-
 ### Abiotic data
-
 ```{r}
-Chem_overview_SmallDatasetMorph<-Chem_uniform_LOIx %>% filter(datasettot=="LEVEL3") %>% group_by(datasettot)%>%
-  summarise(MArea = mean(Area_ha),MinArea = min(Area_ha),MaxArea = max(Area_ha),
-            MDepth = mean(maxDepth_m),MinDepth = min(maxDepth_m),MaxDepth = max(maxDepth_m),
-            MWLF = mean(WLF),MinWLF= min(WLF),MaxWLF = max(WLF))
+Chem_overview_SmallDatasetMorph<-Chem_uniform_LOIx %>% 
+  filter(datasettot=="LEVEL3") %>% 
+  group_by(Lake)%>% #LEVEL3 means all data with WLF & SAC
+  select(Area_ha, maxDepth_m, WLF) %>% unique() %>% ungroup() %>%
+  rename_(.dots=setNames(names(.), tolower(gsub("\\_", ".", names(.)))))%>%
+  summarise_each(funs(mean, median, min, max, sd),-lake) %>%
+  tidyr::gather(variable, value) %>%
+  tidyr::separate(variable, c("var", "stat"), sep = "\\_") %>%
+  tidyr::spread(var, value)
 
+Chem_overview_SmallDataset<-Chem_uniform_LOIx %>% rowwise() %>% filter(datasettot=="LEVEL3") %>%
+  rename_(.dots=setNames(names(.), tolower(gsub("\\_", ".", names(.)))))%>%ungroup()%>% 
+  select(chloride,conduct,nh4n,no3n,ntot,o2diss,ph,ptot,sac,sio2,temp,tempsd,transp,wlf)%>%
+  summarise_each(funs(mean, median, min, max, sd))%>%
+  tidyr::gather(variable, value) %>%
+  tidyr::separate(variable, c("var", "stat"), sep = "\\_") %>%
+  tidyr::spread(var, value)#%>%t()
 
-Chem_overview_SmallDataset<-Chem_uniform_LOIx %>% rowwise() %>% filter(datasettot=="LEVEL3") %>% group_by(datasettot) %>%
-  summarise(MChl = mean(Chloride, na.rm = T),MinChlor = min(Chloride, na.rm = T),MaxChlor = max(Chloride, na.rm = T),
-            MCond = mean(Conduct, na.rm = T),MinCond = min(Conduct, na.rm = T),MaxCond = max(Conduct, na.rm = T),
-            MN_tot = mean(Ntot, na.rm = T),MinN_tot = min(Ntot, na.rm = T),MaxN_tot = max(Ntot, na.rm = T),
-            MNH4N_0 = mean(NH4N, na.rm = T),MinNH4N = min(NH4N, na.rm = T),MaxNH4 = max(NH4N, na.rm = T),
-            MNO3N_0 = mean(NO3N, na.rm = T),MinNO3N = min(NO3N, na.rm = T),MaxNO3N = max(NO3N, na.rm = T),
-            MO2gel_0 = mean(O2diss, na.rm = T),MinO2gel = min(O2diss, na.rm = T),MaxO2gel = max(O2diss, na.rm = T),
-            MPges_0 = mean(Ptot, na.rm = T),MinPges = min(Ptot, na.rm = T),MaxPges = max(Ptot, na.rm = T),
-            MpH_0 = mean(pH, na.rm = T),MinpH = min(pH, na.rm = T),MaxpH = max(pH, na.rm = T),
-            MSiO2_0 = mean(SiO2, na.rm = T),MinSiO2 = min(SiO2, na.rm = T),MaxSiO2 = max(SiO2, na.rm = T),
-            MTemp_0 = mean(Temp, na.rm = T),MinTemp = min(Temp, na.rm = T),MaxTemp = max(Temp, na.rm = T),
-            MTransparency = mean(Transp, na.rm = T),MinTransparency = min(Transp, na.rm = T),MaxTransparency = max(Transp, na.rm = T),
-            MSAK.254 = mean(SAC, na.rm = T),MinSAK.254 = min(SAC, na.rm = T),MaxSAK.254 = max(SAC, na.rm = T),
-            MTemp_0_6_sd = mean(Tempsd, na.rm = T),MinTemp_0_6_sd = min(Tempsd, na.rm = T),MaxTemp_0_6_sd = max(Tempsd, na.rm = T)
-  )
-Chem_overview_SmallD<-cbind(Chem_overview_SmallDatasetMorph,Chem_overview_SmallDataset[,2:39])
-Chem_overview_SmallD
+Chem_overview_SmallD<-cbind(Chem_overview_SmallDatasetMorph,Chem_overview_SmallDataset[,2:15]) %>%
+  tibble::rownames_to_column() %>%  
+  tidyr::gather(var, value, -rowname) %>% 
+  tidyr::spread(rowname, value) %>% 
+  rename(max="1",mean="2", median="3", min="4", sd="5")
 
+df<-cbind(Chem_overview_SmallDatasetMorph,Chem_overview_SmallDataset[,2:15]) %>%
+  column_to_rownames(var = "stat") 
 
+dt<-type_convert(as_tibble(cbind(Parameters = names(df), t(df)))) %>% mutate_if(is.numeric, round, 2)
+dt %>% 
+  select(Parameters,min, max,mean,sd,median)
 ```
 
 
 
-### Biotic data 
+### Biotic data, dataset levels overview 
 
 ```{r}
-
 complete<-MakrophS_ALL %>% 
   dplyr::summarise(N = n_distinct(Lake,YEAR),Lakes_N = n_distinct(Lake),Transects_N = n_distinct(MST_NR),Depths_N =n_distinct(Probestelle),Years_N = n_distinct(YEAR))
 
@@ -89,8 +92,8 @@ Level$dataset<-c("Biotic","Biotic+Abiotic", "Timeseries")
 Level[,c(6,1,2,3,4,5)]
 ```
 
-## Species richness
-
+# Results
+## Species richness per dataset group
 ```{r}
 M<-MakrophS_ALL[5:96]
 M[colSums(M)!=0] %>% ncol() #75
@@ -104,106 +107,116 @@ MT[colSums(MT)!=0] %>% ncol() #66
 
 ```
 
+## Species numbers in taxonomic groups 
+```{r}
+species <- as.data.frame(colnames(MakrophS_ALL[5:96]))
+names(species)<-"Taxon"
+unique(left_join(species,Makroph[c(8,11)],by=c("Taxon"))) %>% 
+  group_by(Erscheinungsform) %>% dplyr::summarise(N=n_distinct(Taxon))
 
-
-# Results
-## H1 Pattern
-### Depth diversity gradients : Full datasets
-
-```{r, fig.height=3, fig.width=8}
-A1<-ggplot(data=Makroph_Lake_DepthS)+
-  geom_line(aes(x=Tiefe, y=ALPHA, group=interaction(Lake, YEAR)),col="grey")+ scale_x_reverse()+
-  geom_line(data=Makroph_Depth,aes(x=(Tiefe), y=mAlpha))+ 
-  geom_errorbar(data=Makroph_Depth,aes(x=(Tiefe),ymin=mAlpha-sdAlpha, ymax=mAlpha+sdAlpha), width=.1)+
-  ylab("Alpha richness")+xlab(("Depth (m)"))
-B1<-ggplot(data=Makroph_Lake_DepthS)+
-  geom_line(aes(x=Tiefe, y=BETA, group=interaction(Lake, YEAR)),col="grey")+ scale_x_reverse()+
-  geom_line(data=Makroph_Depth,aes(x=(Tiefe), y=mBeta))+ 
-  geom_errorbar(data=Makroph_Depth,aes(x=(Tiefe),ymin=mBeta-sdBeta, ymax=mBeta+sdBeta), width=.1)+
-  ylab("Beta richness")+xlab(("Depth (m)"))
-C1<-ggplot(data=Makroph_Lake_DepthS)+
-  geom_line(aes(x=Tiefe, y=GAMMA, group=interaction(Lake, YEAR)),col="grey")+ scale_x_reverse()+
-  geom_line(data=Makroph_Depth,aes(x=(Tiefe), y=mGamma))+ 
-  geom_errorbar(data=Makroph_Depth,aes(x=(Tiefe),ymin=mGamma-sdGamma, ymax=mGamma+sdGamma), width=.1)+
-  ylab("Gamma richness")+xlab(("Depth (m)"))
-ggarrange(A1,B1,C1,ncol=3,nrow=1,labels=c("(a)","(b)","(c)"))
 ```
 
-### Pattern analysis
 
-
+## Gamma richness overview: min, max, mean, sd
 
 ```{r}
-
-PEAK$DepthGroup<-if_else(PEAK$AlphaPeakDepth>-1,"Decreasing curve (Peak: >-1m)",
-                                  if_else(PEAK$AlphaPeakDepth>-2,"Hump-shaped (Peak: -1- -2m)",
-                                          if_else(PEAK$AlphaPeakDepth>-4,"Hump-shaped (Peak -2- -4m)","Increasing curve (Peak: <-4m)")))
-
-PEAKCLASSAlpha<-PEAK %>% group_by(DepthGroup) %>% dplyr::summarise(Alpha_N=n_distinct(interaction(Lake,YEAR)))
-
-
-PEAKCLASS2<-PEAK  %>% group_by(GammaPeakDepth) %>% dplyr::summarise(datasets=n_distinct(interaction(Lake,YEAR))) 
-PEAKCLASS2$DepthGroup<-if_else(PEAKCLASS2$GammaPeakDepth>-1,"Decreasing curve (Peak: >-1m)",
-                                  if_else(PEAKCLASS2$GammaPeakDepth>-2,"Hump-shaped (Peak: -1- -2m)",
-                                  if_else(PEAKCLASS2$GammaPeakDepth>-4,"Hump-shaped (Peak -2- -4m)","Increasing curve (Peak: <-4m)")))
-PEAKCLASSGamma<-PEAKCLASS2 %>% group_by(DepthGroup) %>% dplyr::summarise(Gamma_N=sum(datasets))
-
-PEAKCLASS3<-PEAK %>% group_by(BetaPeakDepth) %>% dplyr::summarise(datasets=n_distinct(interaction(Lake,YEAR)))
-PEAKCLASS3$DepthGroup<-if_else(PEAKCLASS3$BetaPeakDepth>-1,"Decreasing curve (Peak: >-1m)",
-                                  if_else(PEAKCLASS3$BetaPeakDepth>-2,"Hump-shaped (Peak: -1- -2m)",
-                                  if_else(PEAKCLASS3$BetaPeakDepth>-4,"Hump-shaped (Peak -2- -4m)","Increasing curve (Peak: <-4m)")))
-PEAKCLASSBeta<-PEAKCLASS3 %>% group_by(DepthGroup) %>% dplyr::summarise(Beta_N=sum(datasets))
-
-
-
-transpose(left_join(left_join(PEAKCLASSAlpha,PEAKCLASSBeta, by="DepthGroup"),PEAKCLASSGamma,by="DepthGroup"), 
-          keep.names = "col", make.names = "DepthGroup")
-
-
+min(Makroph_Lake_ALL$GAMMA)
+max(Makroph_Lake_ALL$GAMMA)
+mean(Makroph_Lake_ALL$GAMMA)
+sd(Makroph_Lake_ALL$GAMMA)
 ```
 
-### Peak plots
 
-```{r Peak plots, fig.height=3, fig.width=8}
-PPalpha<-peakplot(PEAK,PEAK$AlphaPeakDepth,PEAK$AlphaPeakRichness)
-PPbeta<-peakplot(PEAK,PEAK$BetaPeakDepth,PEAK$BetaPeakRichness)
-PPgamma<-peakplot(PEAK,PEAK$GammaPeakDepth,PEAK$GammaPeakRichness)
+## Depth diversity gradients
 
+```{r figure2,fig.height=7, fig.width=8}
+library(ggpmisc)
+A1<-ggplot(data=Makroph_Depth)+
+  geom_ribbon(aes(x = Tiefe, ymax =mAlpha+sdAlpha, ymin =mAlpha-sdAlpha), alpha = 0.6, fill = "grey")+
+  geom_line(aes(x=(Tiefe), y=mAlpha), size=1)+ 
+  scale_x_reverse()+
+  ylab("Alpha richness")+xlab("Depth (m)")  
 
-ggarrange(PPalpha,PPbeta,PPgamma, ncol=3,common.legend = T, legend="bottom", labels=c("(a)","(b)","(c)"))
+formula1 = y ~ poly(x, 3, raw=TRUE)
+
+A2<-ggplot(data = PEAK, aes(x=AlphaPeakDepth, y=AlphaPeakRichness))+
+  geom_point(aes(shape=datasettotsimpl),alpha=0.2)+
+  scale_shape_discrete(name = "s", 
+                       labels = c("DDG peak, Biodiversity dataset", 
+                                  "DDG peak, Environmental & biodiversity dataset"))+
+  geom_smooth(method=lm,model=lm, formula = formula1,span=1, col="black")+
+  xlab(expression(D[alpha][max](m)))+
+  ylab(expression(R[alpha][max](N)))+
+  theme(legend.position = c(0.9, 0.2),legend.title=element_blank())+
+  scale_x_reverse()+
+  xlim(-0.5,-5)
+
+A3<-ggplot(data=PEAK, aes(x=AlphaPeakDepth))+
+  geom_histogram(breaks=c(0,-1,-2,-4,-5), color="black",fill="white")+#binwidth=1
+    scale_x_reverse()+xlab("Depth (m)")+ylab(expression(D[alpha][max](counts)))
+
+B1<-ggplot(data=Makroph_Depth)+
+  geom_ribbon(aes(x = Tiefe, ymax =mBeta+sdBeta, ymin =mBeta-sdBeta), alpha = 0.6, fill = "grey")+
+  geom_line(aes(x=(Tiefe), y=mBeta), size=1)+ scale_x_reverse()+
+  ylab("Beta richness")+xlab(("Depth (m)")) 
+
+B2<-ggplot(data = PEAK, aes(x=BetaPeakDepth, y=BetaPeakRichness))+
+  geom_point(aes(shape=datasettotsimpl),alpha=0.2)+
+  scale_shape_discrete(name = "s", 
+                       labels = c("DDG peak, Biodiversity dataset", 
+                                  "DDG peak, Environmental & biodiversity dataset"))+
+  geom_smooth(method=lm,model=lm, formula = formula1,span=1, col="black")+
+  xlab(expression(D[beta][max](m)))+
+  ylab(expression(R[beta][max](N)))+
+  theme(legend.position = c(0.9, 0.2),legend.title=element_blank())+
+  scale_x_reverse()+
+   xlim(-0.5,-5) 
+
+B3<-ggplot(data=PEAK, aes(x=BetaPeakDepth))+
+  geom_histogram(breaks=c(0,-1,-2,-4,-5), color="black",fill="white")+#binwidth=1
+    scale_x_reverse()+xlab("Depth (m)")+
+  ylab(expression(D[beta][max](counts)))
+
+C1<-ggplot(data=Makroph_Depth)+
+    geom_ribbon(aes(x = Tiefe, ymax =mGamma+sdGamma, ymin =mGamma-sdGamma), alpha = 0.6, fill = "grey")+
+  geom_line(aes(x=(Tiefe), y=mGamma), size=1, colour="black")+ scale_x_reverse()+
+  ylab("Gamma richness")+xlab(("Depth (m)")) 
+
+C2<-ggplot(data = PEAK, aes(x=GammaPeakDepth, y=GammaPeakRichness))+
+  geom_point(aes(shape=datasettotsimpl),alpha=0.2)+
+  scale_shape_discrete(name = "s", 
+                       labels = c("DDG peak, Biodiversity dataset", 
+                                  "DDG peak, Environmental & biodiversity dataset"))+
+  geom_smooth(method=lm,model=lm, formula = formula1,span=1, col="black")+
+  xlab(expression(D[gamma][max](m)))+
+  ylab(expression(R[gamma][max](N)))+
+  theme(legend.position = c(0.9, 0.2),legend.title=element_blank())+
+  scale_x_reverse()+
+   xlim(-0.5,-5) 
+
+C3<-ggplot(data=PEAK, aes(x=GammaPeakDepth))+
+  geom_histogram(breaks=c(0,-1,-2,-4,-5), color="black",fill="white")+#binwidth=1
+    scale_x_reverse()+xlab("Depth (m)")+ylab(expression(D[gamma][max](counts)))
+
+ggarrange(A1,B1,C1,A2,B2,C2,A3,B3,C3,
+          ncol=3,nrow=3,labels=c("(a)","(b)","(c)","(d)","(e)","(f)","(g)","(h)","(i)"),
+          heights = c(2,1.5,1.8),common.legend = T, legend="bottom", align = "hv")
 ```
 
-## Repr
 
+## Drivers
+### Cor.test
 ```{r}
-
-adonis2(PEAK[,c(3,5)]~datasettotsimpl, data=PEAK, by = NULL) #ALPHAPEAK
-adonis2((PEAK[,c(14,15)])~datasettotsimpl, data=PEAK, by = NULL) #GammaPEAK
-adonis2(scale(PEAK[,c(16,17)])~datasettotsimpl, data=PEAK, by = NULL) #BetaPEAK
-```
-
-
-## H2 Drivers
-
-
-### Correlations
-
-```{r, fig.width=14, fig.height=5}
-PEAK_Chem_norm[c(33,20,22,31,32,29,30,16,19,3:15)] %>% 
-  correlate(use="pairwise.complete.obs", method = "pearson") %>% 
-  network_plot(min_cor=0.5)
+cor.test(PEAK_Chem_norm$AlphaPeakRichness, PEAK_Chem_norm$Ntot)
 ```
 
 
 
+### GAMM incl PCA
 
-### PCA
-
-
-```{r PCA, fig.height=2.5, fig.width=6.54}
+```{r, fig.height=8, fig.width=10}
 ################ PCA ###############################################
-
-label_lake<- PEAK_Chem_norm[complete.cases(PEAK_Chem_norm[,c(3:16,19)]),] #LEVEL 3 data #[,c(3:16,19)] #[,c(8:10,12:16,19)]
+label_lake<- PEAK_Chem_norm[complete.cases(PEAK_Chem_norm[,c(3:16,19)]),] #LEVEL 3 data 
 lak.pca <- prcomp(na.omit(label_lake[,c(3:16,19)]),center = TRUE, scale. = TRUE)
 #print(lak.pca)
 #summary(lak.pca) 
@@ -219,19 +232,34 @@ names(PCA)[1]<-"Lake"
 
 PEAK_PCA<-merge(PCA, PEAK_Chem_norm, by=c("Lake", "YEAR"))
 
-par(mfrow=c(1,4))
-axis1<-barplot(lak.pca$rotation[,1], main="PC1", las=2,horiz = TRUE)
-axis2<-barplot(lak.pca$rotation[,2], main="PC2", yaxt='n',horiz = TRUE, las=2)
-axis3<-barplot(lak.pca$rotation[,3], main="PC3", yaxt='n',horiz = TRUE, las=2)
-axis4<-barplot(lak.pca$rotation[,4], main="PC4", yaxt='n',horiz = TRUE, las=2)
+Rotation <-lak.pca$rotation %>% as.data.frame()
+Rotation$variable <- row.names(Rotation)
+R1<-ggplot(data=Rotation)+
+  geom_bar(aes(y=variable,x=PC1,fill = PC1 > 0.4 | PC1< -0.4), stat='identity')+
+  xlim(-0.65,0.65)+
+  #theme(axis.title.y=element_blank(),axis.text.y=element_blank())+
+  ylab("")+xlab("loading")+
+  ggtitle("     PC1 - 30.1% \nSiO2 & Cond axis")
 
-```
+R2<-ggplot(data=Rotation)+geom_bar(aes(y=variable,x=PC2,fill = PC2 > 0.4 | PC2< -0.4), stat='identity')+
+  xlim(-0.65,0.65)+
+  theme(axis.title.y=element_blank(),axis.text.y=element_blank())+ylab("")+
+  ggtitle("     PC2 - 26.1%\nTemp & Ptot axis")+xlab("loading")+ylab("")
+
+R3<-ggplot(data=Rotation)+geom_bar(aes(y=variable,x=PC3,fill = PC3 > 0.4 | PC3< -0.4), stat='identity')+
+  xlim(-0.65,0.65)+ylab("")+
+  theme(axis.title.y=element_blank(),axis.text.y=element_blank())+
+  ggtitle("     PC3 - 13.3%\nTempsd – Chl axis")+xlab("loading")
+
+R4<-ggplot(data=Rotation)+geom_bar(aes(y=variable,x=PC4,fill = PC4 > 0.4 | PC4< -0.4), stat='identity')+
+  xlim(-0.65,0.65)+ylab("")+
+  theme(axis.title.y=element_blank(),axis.text.y=element_blank())+
+  ggtitle("     PC4 - 10.5%\nO2diss – SAC axis")+xlab("loading")
 
 
-### GAMM
 
-```{r GAMM, fig.height=3, fig.width=10}
 
+## GAMM
 gam_AlphaPeakDepth <- gamm4(AlphaPeakDepth ~ s(PC1)+s(PC2)+s(PC3)+s(PC4),
                             random= ~(1|Lake), # package gamm4
                             data=PEAK_PCA)
@@ -243,93 +271,145 @@ gam_AlphaPeakRichness <- gamm4(AlphaPeakRichness ~ s(PC1),
                                data=PEAK_PCA)
 summary(gam_AlphaPeakRichness$gam)
 
+library(voxel)
+library(gridExtra)
+vars <- c("PC2", "PC4","PC3","PC1")
 
-par(mfrow=c(1,5))
+library(grid)
 
-plot(gam_AlphaPeakDepth$gam,residuals=TRUE, main = expression(D[alpha][max]), shade = T,seWithMean=T, select=2)
-text(-2, 1.0, "(a)", cex=2)
-plot(gam_AlphaPeakDepth$gam,residuals=TRUE, main = expression(D[alpha][max]), shade = T,seWithMean=T, select=4)
-text(-2, 1.0, "(b)", cex=2)
-plot(gam_AlphaPeakDepth$gam,residuals=TRUE, main = expression(D[alpha][max]), shade = T,seWithMean=T, select=3)
-text(-2, 1.0, "(c)", cex=2)
-plot(gam_AlphaPeakDepth$gam,residuals=TRUE, main = expression(D[alpha][max]), shade = T,seWithMean=T, select=1)
-text(-3.5, 1.0, "(d)", cex=2)
-plot(gam_AlphaPeakRichness$gam,residuals=TRUE, main = expression(R[alpha][max]), shade = T,seWithMean=T)
-text(-4, 3.5, "(e)", cex=2)
+grob2 <- grobTree(textGrob("*** 36.6% dc", x=0.1,  y=0.9, hjust=0,
+  gp=gpar(col="grey12", fontsize=13, fontface="italic")))
+
+plotPC2<-plotGAMM(gam_AlphaPeakDepth, smooth.cov = "PC2")  +
+    geom_point(data = PEAK_PCA, aes_string(y = "AlphaPeakDepth", x = "PC2"), alpha = 0.2) +
+    geom_rug(data = PEAK_PCA, aes_string(y = "AlphaPeakDepth", x = "PC2"), alpha = 0.2) +
+    #scale_color_manual("Private", values = c("#868686FF", "#0073C2FF")) +
+    theme(legend.position="none")+
+    ylab("")+ylim(-3.5,-0.5)+
+    ggtitle("")+ 
+  theme(axis.title.y=element_blank(),axis.text.y=element_blank())+
+  theme(legend.title = element_blank())+
+  annotation_custom(grob2)
+
+grob4 <- grobTree(textGrob("** 30.3% dc", x=0.1,  y=0.9, hjust=0,
+  gp=gpar(col="grey12", fontsize=13, fontface="italic")))
+
+vars <- c("PC4")
+plotPC4<- plotGAMM(gam_AlphaPeakDepth, smooth.cov = "PC4")  +
+    geom_point(data = PEAK_PCA, aes_string(y = "AlphaPeakDepth", x = "PC4"), alpha = 0.2) +
+    geom_rug(data = PEAK_PCA, aes_string(y = "AlphaPeakDepth", x = "PC4"), alpha = 0.2) +
+    #scale_color_manual("Private", values = c("#868686FF", "#0073C2FF")) +
+    theme(legend.position="none")+theme(legend.title = element_blank())+
+    ylab("")+ylim(-3.5,-0.5)+
+    #ylab(expression(predicted_D[alpha][max]))+
+  theme(axis.title.y=element_blank(),axis.text.y=element_blank())+
+   ggtitle("")+ 
+  annotation_custom(grob4)
+
+grob3 <- grobTree(textGrob("** 28.6% dc", x=0.1,  y=0.9, hjust=0,
+  gp=gpar(col="grey12", fontsize=13, fontface="italic")))
+vars <- c("PC3")
+plotPC3<-plotGAMM(gam_AlphaPeakDepth, smooth.cov = "PC3")  +
+    geom_point(data = PEAK_PCA, aes_string(y = "AlphaPeakDepth", x = "PC3"), alpha = 0.2) +
+    geom_rug(data = PEAK_PCA, aes_string(y = "AlphaPeakDepth", x = "PC3"), alpha = 0.2) +
+    #scale_color_manual("Private", values = c("#868686FF", "#0073C2FF")) +
+    theme(legend.position="none")+theme(legend.title = element_blank())+
+  ylab("")+ylim(-3.5,-0.5)+
+    #ylab(expression(predicted_D[alpha][max]))+
+  theme(axis.title.y=element_blank(),axis.text.y=element_blank())+
+    ggtitle("")+ 
+  annotation_custom(grob3)
+
+grob1 <- grobTree(textGrob("* 25.6% dc", x=0.1,  y=0.9, hjust=0,
+  gp=gpar(col="grey12", fontsize=13, fontface="italic")))
+vars <- c("PC1")
+plotPC1<-plotGAMM(gam_AlphaPeakDepth, smooth.cov = "PC1")  +
+    geom_point(data = PEAK_PCA, aes_string(y = "AlphaPeakDepth", x = "PC1"), alpha = 0.2) +
+    geom_rug(data = PEAK_PCA, aes_string(y = "AlphaPeakDepth", x = "PC1"), alpha = 0.2) +
+    #scale_color_manual("Private", values = c("#868686FF", "#0073C2FF")) +
+    theme(legend.position="none")+
+    ylab(expression(predicted_D[alpha][max]))+ylim(-3.5,-0.5)+
+    ggtitle("")+ theme(legend.title = element_blank())+
+  annotation_custom(grob1)
+
+grob5 <- grobTree(textGrob("**", x=0.1,  y=0.9, hjust=0,
+  gp=gpar(col="grey12", fontsize=13, fontface="italic")))
+vars2 <- c("PC1")
+plot2<-plotGAMM(gam_AlphaPeakRichness, smooth.cov = "PC1")  +
+    geom_point(data = PEAK_PCA, aes_string(y = "AlphaPeakRichness", x = "PC1"), alpha = 0.2) +
+    geom_rug(data = PEAK_PCA, aes_string(y = "AlphaPeakRichness", x = "PC1"), alpha = 0.2) +
+    #scale_color_manual("Private", values = c("#868686FF", "#0073C2FF")) +
+    theme(legend.position="none")+
+    ylab(expression(predicted_R[alpha][max]))+
+    #labs(tag = "E")+
+    ggtitle("")+  theme(legend.title = element_blank())+
+  annotation_custom(grob5)
+
+empty<-plot(0, xaxt = 'n', yaxt = 'n', bty = 'n', pch = '', ylab = '', xlab = '')
+
+ggarrange(R1,R2,R3,R4, 
+          ncol=4, common.legend = T, legend="top", labels = c("(a)","(b)","(c)","(d)"), widths = c(1.3,1,1,1))
+
+ggarrange(plotPC1, plotPC2, plotPC3, plotPC4, plot2,
+          ncol=4, nrow=3,
+          heights = c(4,3,3),
+          common.legend = T, legend="top",
+          labels = c("(e)","(f)","(g)","(h)","(i)"),
+          #widths = c(1.4,1,1,1),
+          align = "hv"
+          )
+
+Fig3<-ggarrange(R1,R2,R3,R4, plotPC1, plotPC2, plotPC3, plotPC4, plot2,empty, empty, empty, 
+          ncol=4, nrow=3,
+          heights = c(4,3,3),
+          common.legend = T, legend="top",
+          labels = c("(a)","(b)","(c)","(d)","(e)","(f)","(g)","(h)","(i)"),
+          #widths = c(1.4,1,1,1),
+          align = "hv"
+          )
+Fig3
+ggsave("Fig3.pdf",plot=Fig3,width = 9, height = 8, device=cairo_pdf)
 
 
 ```
 
 
 
-## H3: Temporal change
+## Temporal change
 
-### Range
-
-```{r Variability, fig.height=2, fig.width=9}
-LAKECHANGE<-PEAK%>% dplyr::group_by(Lake) %>%
-   dplyr::summarise(NYEAR=n_distinct(YEAR),
-             AlphaPeakDepthmean=mean(AlphaPeakDepth),
-             AlphaPeakDepthRange=max(AlphaPeakDepth)-min(AlphaPeakDepth),
-             AlphaPeakDepthsd=sd(AlphaPeakDepth),
-             AlphaPeakRichnessnmean=mean(AlphaPeakRichness),
-             AlphaPeakRichnessRange=max(AlphaPeakRichness)-min(AlphaPeakRichness),
-             BetaPeakDepthmean=mean(BetaPeakDepth),
-             BetaPeakDepthRange=max(BetaPeakDepth)-min(BetaPeakDepth), 
-             BetaPeakRichnessnmean=mean(BetaPeakRichness),
-             BetaPeakRichnessRange=max(BetaPeakRichness)-min(BetaPeakRichness),
-             GammaPeakDepthmean=mean(GammaPeakDepth),
-             GammaPeakDepthRange=max(GammaPeakDepth)-min(GammaPeakDepth),
-             GammaPeakDepthsd=sd(GammaPeakDepth),
-             GammaPeakRichnessnmean=mean(GammaPeakRichness),
-             GammaPeakRichnessRange=max(GammaPeakRichness)-min(GammaPeakRichness)
+### Invariability analysis
+```{r, fig.height=5, fig.width=5}
+LAKECHANGEInv<-PEAK %>% 
+  dplyr::group_by(Lake) %>% #summarize informtion for lakes (over timeseries)
+  dplyr::summarise(NYEAR=n_distinct(YEAR),
+             AlphaPeakDepthInv=mean(-AlphaPeakDepth)/sd(-AlphaPeakDepth), 
+             AlphaPeakRichnessInv=mean(AlphaPeakRichness)/sd(AlphaPeakRichness),
+             BetaPeakDepthInv=mean(-BetaPeakDepth)/sd(-BetaPeakDepth), 
+             BetaPeakRichnessInv=mean(BetaPeakRichness)/sd(BetaPeakRichness),
+             GammaPeakDepthInv=mean(-GammaPeakDepth)/sd(-GammaPeakDepth),
+             GammaPeakRichnessInv=mean(GammaPeakRichness)/sd(GammaPeakRichness),
+             GammaRichnessInv=mean(GAMMA)/sd(GAMMA)
              )%>%
-   filter(NYEAR>3) #For timeseries dataset
+  filter(NYEAR>3) %>% #For timeseries dataset
+  arrange(AlphaPeakDepthInv) %>% 
+  filter_all(all_vars(!is.infinite(.)))
 
- LAKECHANGE2<-LAKECHANGE %>%
-   mutate(APeakDepthRangeClass=ifelse(AlphaPeakDepthRange<1,"0-1m",
-                                      ifelse(AlphaPeakDepthRange<2,"1-2m",
-                                             ifelse(AlphaPeakDepthRange<3,"2-3m",
-                                                    ifelse(AlphaPeakDepthRange<4,"3-4m",
-                                                           ifelse(AlphaPeakDepthRange<5,"4-5m",99))))),
-          BPeakDepthRangeClass=ifelse(BetaPeakDepthRange<1,"0-1m",
-                                      ifelse(BetaPeakDepthRange<2,"1-2m",
-                                             ifelse(BetaPeakDepthRange<3,"2-3m",
-                                                    ifelse(BetaPeakDepthRange<4,"3-4m",
-                                                           ifelse(BetaPeakDepthRange<5,"4-5m",99))))),
-          GPeakDepthRangeClass=ifelse(GammaPeakDepthRange<1,"0-1m",
-                                      ifelse(GammaPeakDepthRange<2,"1-2m",
-                                             ifelse(GammaPeakDepthRange<3,"2-3m",
-                                                    ifelse(GammaPeakDepthRange<4,"3-4m",
-                                                           ifelse(GammaPeakDepthRange<5,"4-5m",99))))))
+#LAKECHANGEInv 
 
-AA<-LAKECHANGE2%>%
-  group_by(APeakDepthRangeClass)%>%
-  dplyr::summarise(AlphaPeakDepthRange=n_distinct(Lake))%>%
-   dplyr::rename(PeakDepthRangeClass=APeakDepthRangeClass)
-BA<-LAKECHANGE2%>%
-  group_by(BPeakDepthRangeClass)%>%
-  dplyr::summarise(BetaPeakDepthRange=n_distinct(Lake))%>%
-   dplyr::rename(PeakDepthRangeClass=BPeakDepthRangeClass)
-GA<-LAKECHANGE2%>%
-  group_by(GPeakDepthRangeClass)%>%
-  dplyr::summarise(GammaPeakDepthRange=n_distinct(Lake))%>%
-  dplyr::rename(PeakDepthRangeClass=GPeakDepthRangeClass)
 
-AB<-full_join(AA,BA,by=c("PeakDepthRangeClass"))
-ABG<-full_join(AB,GA,by=c("PeakDepthRangeClass"))
-ABGs<-ABG %>% tidyr::gather("Type", "Nlakes", -PeakDepthRangeClass)
+# ggplot(LAKECHANGEInv %>% gather(Type, "Inv", 3:9)) +
+#   geom_histogram(aes(x=Inv), col="white", fill="black",binwidth = 1)+
+#   facet_wrap(~Type, ncol = 2)+
+#   xlab("Inverse Variation coefficient = Invariability coefficient")
 
-positions <- c("GammaPeakDepthRange","BetaPeakDepthRange", "AlphaPeakDepthRange" )
-ggplot(ABGs,aes(x=(Type),y=Nlakes,fill=PeakDepthRangeClass))+
-   geom_col(position = position_stack(reverse = TRUE))+
-   xlab("")+ylab("Lakes (N)")+
-   coord_flip()+
-   scale_x_discrete(limits = positions,labels=c("AlphaPeakDepthRange" = bquote("D"[alpha][max]), "BetaPeakDepthRange" =         
-                                                  bquote("D"[beta][max]), "GammaPeakDepthRange" = bquote("D"[gamma][max])))+ 
-   scale_fill_discrete(name = bquote("D"[max] ~"range" ))
-                                                            
+LAKECHANGEInv%>%
+  dplyr::ungroup() %>%
+  select(-Lake, -NYEAR)%>%
+  dplyr::summarise_all(list(mean=mean,sd=sd), na.rm=TRUE) 
+
 ```
+
+
 
 
 ### Linear models
@@ -428,6 +508,18 @@ ModelTshort <- data.frame(lapply(ModelTshort, function(x) {gsub("_NA", "", x)}))
 ModelTshort <- data.frame(lapply(ModelTshort, function(x) {gsub("_", "", x)}))
 
 ModelTshort
+
+```
+
+#Discussion
+## Summary figure
+```{r}
+ggplot(data=Makroph_Depth)+
+  geom_line(data=Makroph_Depth,aes(x=(Tiefe), y=mAlpha), col="darkgreen", size=1)+
+  geom_line(data=Makroph_Depth, aes(x=(Tiefe), y=mBeta), col="green2", size=1)+ 
+  geom_line(data=Makroph_Depth,aes(x=(Tiefe), y=mGamma), col="lightgreen", size=1, colour="black")+
+  ylab("Richness")+xlab(("Depth (m)"))+ scale_x_reverse()
+
 
 ```
 

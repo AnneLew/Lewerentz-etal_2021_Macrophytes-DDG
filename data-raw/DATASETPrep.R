@@ -12,7 +12,7 @@ setwd("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/2_DDGasPackage/Macroph
 ## Data import
 MakrophS_raw <- Makroph_comm_S  %>% #Macrophytes data
   ungroup() %>%
-  select(-LAKE_TYPE2) %>%
+  #select(-LAKE_TYPE2) %>%
   rename(Lake=Gewässer)%>%
   mutate(YEAR=as.factor(YEAR))
 
@@ -31,10 +31,10 @@ Morph <- Morphology %>% #Import morphological Dataset
   filter(Lake !="Barmsee") %>%#Weil nur 1 Kartierung
   filter(Area_ha >=50) %>%#No WFD moniotoring
   filter(maxDepth_m > 10) %>% #Exclude shallow lakes
-  select(-Nat.artifi) %>%#Exclude parameters I don't use
+  #select(-Nat.artifi) %>%#Exclude parameters I don't use
   rename(WLF = MHWMNW_Diff)
 
-MakrophS_ALL <- merge(MakrophS_raw, Morph, by.x=c("Lake"), by.y=c("Name_Makro_short") )[,1:97] #Selection of macrophytes of lakes of interest by merging with Morphological dataset (without artificial & shallow) without adding Morphology data
+MakrophS_ALL <- merge(MakrophS_raw, Morph, by.x=c("Lake"), by.y=c("Name_Makro_short") )[,1:98] #Selection of macrophytes of lakes of interest by merging with Morphological dataset (without artificial & shallow) without adding Morphology data
 
 Chem_table <- Chem.Mean.YearDF %>% dplyr::rename(YEAR = Var2, Lake = Var1) #Import Chemical Dataset, annual means
 Chem_ALL <- Chem_table %>%  group_by(Lake, YEAR)%>% spread(key = Var3, value = value) #Transformation in Table
@@ -87,7 +87,7 @@ Makroph_Lake_ALL$GAMMA <- specnumber(Makroph_Lake_ALL[c(4:SPlength)]) #Gamma ric
 
 
 ## Create table to destinguish between Datasets of Macroph_ALL: without Chem ("NoChem"), "SAK","NoSAK"
-DATASET <- left_join(Makroph_Lake_ALL, Chem_uniform_LOI, by.x=c("Lake", "YEAR"), by.y=c("Name_Makro_short","YEAR") )[,c(1:2,119,120,121)]
+DATASET <- left_join(Makroph_Lake_ALL, Chem_uniform_LOI, by.x=c("Lake", "YEAR"), by.y=c("Name_Makro_short","YEAR") )[,c(1:2,121,122,123)]
 DATASET$dataset[is.na(DATASET$dataset)]<-"NoChem"
 DATASET$datasetWLF[is.na(DATASET$datasetWLF)]<-"NoChem"
 DATASET$datasettot[DATASET$dataset=="NoChem"]<-"LEVEL1"
@@ -141,13 +141,16 @@ Makroph_Lake_DepthS<-merge(Makroph_Lake_DepthS, DATASET, by=c("Lake", "YEAR")) #
 
 Makroph_Depth <- Makroph_Lake_DepthS %>%
   group_by(Probestelle) %>%
-  summarise(mAlpha=mean(ALPHA), sdAlpha=sd(ALPHA),mBeta=mean(BETA), sdBeta=sd(BETA),mGamma=mean(GAMMA), sdGamma=sd(GAMMA), Tiefe=mean(Tiefe))
+  summarise(mAlpha=mean(ALPHA), sdAlpha=sd(ALPHA), maxAlpha=max(ALPHA), minAlpha=min(ALPHA),
+            mBeta=mean(BETA), sdBeta=sd(BETA),maxBeta=max(BETA), minBeta=min(BETA),
+            mGamma=mean(GAMMA), sdGamma=sd(GAMMA), maxGamma=max(GAMMA), minGamma=min(GAMMA),
+            Tiefe=mean(Tiefe))
 
 ## Calculation of Gamma Peak measures
 Peak_Gamma <- Makroph_Lake_DepthS  %>%
   group_by(Lake, YEAR, dataset, datasetWLF, datasettot) %>%
   filter(GAMMA == max(GAMMA)) %>%
-  select("Lake", "YEAR", "Tiefe", "GAMMA", "dataset", "datasetWLF", "datasettot") %>%
+  dplyr::select("Lake", "YEAR", "Tiefe", "GAMMA", "dataset", "datasetWLF", "datasettot") %>%
   summarise(GammaPeakDepth=mean(Tiefe), GammaPeakRichness=mean(GAMMA))
 #Peak_Gamma <- merge(Peak_Gamma,Makroph_Lake_ALL[c(1,2,98)], by=c("Lake", "YEAR")) #To add gamma richness
 
@@ -155,7 +158,7 @@ Peak_Gamma <- Makroph_Lake_DepthS  %>%
 Peak_Beta <- Makroph_Lake_DepthS  %>%
   group_by(Lake, YEAR, dataset, datasetWLF, datasettot) %>%
   filter(BETA == max(BETA)) %>%
-  select("Lake", "YEAR", "Tiefe", "BETA", "dataset", "datasetWLF", "datasettot") %>%
+  dplyr::select("Lake", "YEAR", "Tiefe", "BETA", "dataset", "datasetWLF", "datasettot") %>%
   summarise(BetaPeakDepth=mean(Tiefe),BetaPeakRichness=mean(BETA))
 #Peak_Beta <- merge(Peak_Beta,Makroph_Lake_ALL[c(1,2,98)], by=c("Lake", "YEAR")) #To add gamma richness
 
@@ -171,7 +174,7 @@ PEAK_Chem<-inner_join(Chem_uniform_LOI, PEAK, by.y=c("Lake", "YEAR"),by.x=c("Nam
 
 ## Log+1 Transformation of abiotic data
 PEAK_Chem_norm<-bind_cols(PEAK_Chem[c(1,2)], #Lake, YEAR, dataset
-                          log(PEAK_Chem[c(3:15,17,18,19,23)]+1),#Chem & Morphometry
+                          log(PEAK_Chem[c(3:15,17,18,19,24)]+1),#Chem & Morphometry
                           PEAK_Chem[c(27:40)]) #MBD, SPNRmean, Gamma, group, dataset
 
 
