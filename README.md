@@ -20,7 +20,7 @@ Anne Lewerentz¹\*, Markus Hoffmann², Juliano Sarmento Cabral¹
 
 *Release 0.9* corresponds to a *Preprint*:
 
--   Anne Lewerentz, Markus Hoffmann, Juliano Sarmento Cabral. Depth diversity gradients of macrophytes: shape, drivers and recent shifts. Authorea. April 20, 2021. [DOI: 10.22541/au.161893346.60777770/v1](DOI:%2010.22541/au.161893346.60777770/v1)
+-   Anne Lewerentz, Markus Hoffmann, Juliano Sarmento Cabral. Depth diversity gradients of macrophytes: shape, drivers and recent shifts. Authorea. April 20, 2021. [DOI: 10.22541/au.161893346.60777770/v1](https://www.authorea.com/users/409017/articles/518802-depth-diversity-gradients-of-macrophytes-shape-drivers-and-recent-shifts?commit=50fa6e716400b5957bbe4ecfedd786b3ef8255de)
 
 *Release 1.0* will correspond to the final Version:
 
@@ -28,7 +28,7 @@ Anne Lewerentz¹\*, Markus Hoffmann², Juliano Sarmento Cabral¹
 
 ## Data source
 
-Raw data source of all used data is: Bayerisches Landesamt für Umwelt, www.lfu.bayern.de (Published under *Licence CC BY 4.0*).
+Source of all used raw data is: Bayerisches Landesamt für Umwelt, www.lfu.bayern.de (Published under *Licence CC BY 4.0*).
 
 
 ## Structure of research compendium
@@ -38,7 +38,7 @@ Raw data source of all used data is: Bayerisches Landesamt für Umwelt, www.lfu.
 -   `analysis/`: R code in .Rmd files to reproduce tables, figures and analysis of main file and Supplementary material
 
 
-## Reproduce the results
+## How to reproduce the results
 
 ### Install the package
 
