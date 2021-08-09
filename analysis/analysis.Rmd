@@ -41,8 +41,9 @@ source("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/3_WFD-Project/02_Them
 ### Abiotic data
 ```{r}
 Chem_overview_SmallDatasetMorph<-Chem_uniform_LOIx %>% 
-  filter(datasettot=="LEVEL3") %>% 
-  group_by(Lake)%>% #LEVEL3 means all data with WLF & SAC
+  filter(dataset=="SAK") %>% 
+  filter(datasetWLF=="WLF") %>% 
+  group_by(Lake)%>% 
   select(Area_ha, maxDepth_m, WLF) %>% unique() %>% ungroup() %>%
   rename_(.dots=setNames(names(.), tolower(gsub("\\_", ".", names(.)))))%>%
   summarise_each(funs(mean, median, min, max, sd),-lake) %>%
@@ -50,7 +51,9 @@ Chem_overview_SmallDatasetMorph<-Chem_uniform_LOIx %>%
   tidyr::separate(variable, c("var", "stat"), sep = "\\_") %>%
   tidyr::spread(var, value)
 
-Chem_overview_SmallDataset<-Chem_uniform_LOIx %>% rowwise() %>% filter(datasettot=="LEVEL3") %>%
+Chem_overview_SmallDataset<-Chem_uniform_LOIx %>% rowwise() %>% 
+  filter(dataset=="SAK") %>% 
+  filter(datasetWLF=="WLF") %>% 
   rename_(.dots=setNames(names(.), tolower(gsub("\\_", ".", names(.)))))%>%ungroup()%>% 
   select(chloride,conduct,nh4n,no3n,ntot,o2diss,ph,ptot,sac,sio2,temp,tempsd,transp,wlf)%>%
   summarise_each(funs(mean, median, min, max, sd))%>%
@@ -206,12 +209,12 @@ Fig2<-ggarrange(A1,B1,C1,A2,B2,C2,A3,B3,C3,
           heights = c(2,1.5,1.8),common.legend = T, legend="none", align = "hv")
 
 
-png("Fig2.png", width=16.6, height=18,units = "cm",res=300)
-Fig2
-dev.off
-
-ggsave("Fig2.pdf",plot=Fig1,width=16.6, height = 18, device=cairo_pdf, units = "cm")
-
+# png("Fig2.png", width=16.6, height=18,units = "cm",res=300)
+# Fig2
+# dev.off
+# 
+# ggsave("Fig2.pdf",plot=Fig1,width=16.6, height = 18, device=cairo_pdf, units = "cm")
+windowsFonts("Arial" = windowsFont("Arial"))
 Fig2
 ```
 
@@ -380,11 +383,11 @@ Fig3<-ggarrange(R1,R2,R3,R4, plotPC1, plotPC2, plotPC3, plotPC4, plot2,empty, em
           align = "hv"
           )
 Fig3
-ggsave("Fig3.pdf",plot=Fig3,width = 9, height = 8, device=cairo_pdf)
-
-png("Fig3.png", width=16.6, height=18,units = "cm",res=300)
-Fig3
-dev.off
+# ggsave("Fig3.pdf",plot=Fig3,width = 9, height = 8, device=cairo_pdf)
+# 
+# png("Fig3.png", width=16.6, height=18,units = "cm",res=300)
+# Fig3
+# dev.off
 
 ```
 
@@ -394,6 +397,8 @@ dev.off
 
 ### Invariability analysis
 ```{r, fig.height=5, fig.width=5}
+
+
 LAKECHANGEInv<-PEAK %>% 
   dplyr::group_by(Lake) %>% #summarize informtion for lakes (over timeseries)
   dplyr::summarise(NYEAR=n_distinct(YEAR),
@@ -431,6 +436,14 @@ LAKECHANGEInv%>%
 
 ```{r Linear models, message=FALSE, warning=FALSE}
 PEAK<-PEAK %>%mutate(YEAR=as.numeric(YEAR))
+
+lmp <- function (modelobject) {
+  if (class(modelobject) != "lm") stop("Not an object of class 'lm' ")
+  f <- summary(modelobject)$fstatistic
+  p <- pf(f[1],f[2],f[3],lower.tail=FALSE)
+  attributes(p) <- NULL
+  return(p)
+}
 
 
 GammaModel<-PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3) %>% 

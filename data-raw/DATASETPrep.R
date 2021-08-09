@@ -181,8 +181,6 @@ PEAK_Chem_norm<-bind_cols(PEAK_Chem[c(1,2)], #Lake, YEAR, dataset
 
 
 ## Save results ----
-setwd("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/2_DDGasPackage/MacrophytesDDG")
-
 usethis::use_data(MakrophS_ALL, overwrite = TRUE)
 usethis::use_data(Makroph_Lake_DepthS, overwrite = TRUE)
 usethis::use_data(Makroph_Depth, overwrite = TRUE)
