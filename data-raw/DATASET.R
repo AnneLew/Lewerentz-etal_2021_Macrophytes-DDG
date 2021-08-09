@@ -1,15 +1,10 @@
-## code to prepare `DATASET` dataset goes here
-
-#### PREPARATION ####
-## Set WD
-setwd("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/2_DDGasPackage/MacrophytesDDG")
-
 ## LOAD Packages
 library(dplyr)
 library(tidyverse)
 library(ggplot2)
 library(lubridate)
 library(stringr)
+library(here)
 
 
 ##########################################################################################
@@ -19,7 +14,6 @@ library(stringr)
 
 ## Load data
 setwd("./data-raw/abiotic") #In raw data, all values <BG (below detection limit) were replaced with 0 as I don't know all BG values
-
 
 chem <- list.files(pattern="*.csv")
 chem.names <- paste("Chem", strtrim(chem, 4), sep="")
@@ -101,7 +95,6 @@ Chem.Mean.YearDF <- as.data.frame.table(Chem.Mean.Year, responseName = "value")
 Chem.Mean.YearDF <- subset(Chem.Mean.YearDF, !is.na(Chem.Mean.YearDF$value))
 
 ## Save data
-setwd("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/2_DDGasPackage/MacrophytesDDG")
 usethis::use_data(Chem.Mean.YearDF, overwrite = TRUE)
 
 
@@ -111,14 +104,11 @@ usethis::use_data(Chem.Mean.YearDF, overwrite = TRUE)
 ###################################   BIOTIC DATA   ######################################
 #################### Result: Community table for submerged macrophytes ###################
 ##########################################################################################
-
-
-## Set WD
-setwd("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/2_DDGasPackage/MacrophytesDDG")
+setwd(here())
 
 ## Load data
 Makroph <- read.csv("./data-raw/biotic/Makrophyten_WRRL_05-17_nurMakrophytes.csv", header=TRUE, sep=";")
-unique(Makroph$Erscheinungsform)
+
 ## Filter for unplausible datasets
 Makroph <- Makroph %>%
   filter(!(Gewässer=="Chiemsee" & (YEAR==2011))) %>% filter(!(Gewässer=="Chiemsee" & YEAR==2012)) %>% # 1 plot per year -> wrong

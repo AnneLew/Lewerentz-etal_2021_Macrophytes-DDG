@@ -5,14 +5,12 @@ library(dplyr)
 library(tidyr)
 library(vegan)
 library(stringr)
+library(here)
 
-## Set WD
-setwd("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/2_DDGasPackage/MacrophytesDDG")
 
 ## Data import
 MakrophS_raw <- Makroph_comm_S  %>% #Macrophytes data
   ungroup() %>%
-  #select(-LAKE_TYPE2) %>%
   rename(Lake=Gewässer)%>%
   mutate(YEAR=as.factor(YEAR))
 
