@@ -117,7 +117,7 @@ usethis::use_data(Chem.Mean.YearDF, overwrite = TRUE)
 setwd("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/2_DDGasPackage/MacrophytesDDG")
 
 ## Load data
-Makroph <- read.csv("./data-raw/Makrophyten_WRRL_05-17_nurMakrophytes.csv", header=TRUE, sep=";")
+Makroph <- read.csv("./data-raw/biotic/Makrophyten_WRRL_05-17_nurMakrophytes.csv", header=TRUE, sep=";")
 unique(Makroph$Erscheinungsform)
 ## Filter for unplausible datasets
 Makroph <- Makroph %>%

@@ -16,7 +16,7 @@ Biology, Technical University of Munich, Germany
 [anne.lewerentz\@uni-wuerzburg.de](mailto:anne.lewerentz@uni-wuerzburg.de)
 
 This repository is a R package which includes all data, analysis files
-and results to reproduce the data analysis of Lewerentz et al 2021.
+and results to reproduce the following publications given in the Journal reference.
 
 ## Journal reference
 Research Compendium *Release 0.9* corresponds to *Preprint*:
@@ -33,7 +33,7 @@ Research Compendium *Release 1.0* will correspond to:
 ## Data source
 
 Raw data source of macrophytes data and environmental measurements is:
-Bayerisches Landesamt für Umwelt, www.lfu.bayern.de . Licence CC BY 4.0
+Bayerisches Landesamt für Umwelt, www.lfu.bayern.de (Publishe under *Licence CC BY 4.0*).
 
 
 ## Reproduce the results
@@ -53,8 +53,10 @@ To install the package in R follow this code:
 To reproduce the results run the R scripts in the following order:
 | Order | Script Name | Description |
 | --- | --- | --- |
-| 1 | `Read_in_data.R` | description |
-| 2 | ... | descr |
+| 1 | `DATASET.R` | Prepares the datasets: Makroph_comm_S; Makroph; Chem.Mean.YearDF |
+| 2 | `DATASETPrep.R` | MakrophS_ALL; Makroph_Lake_DepthS; Makroph_Depth; Makroph_Lake_ALL; PEAK; Chem_uniform_LOIx; PEAK_Chem_norm|
+| 3 | name | descr |
+| 3 | name | descr |
 
 
 ## Structure of research compendium
@@ -62,6 +64,6 @@ To reproduce the results run the R scripts in the following order:
 -   `data-raw/`: Raw datasets for biotic and abiotic data and R code to
     generate data in preparation files `data/`
 -   `data/`: Cleaned data used for the analysis
--   `analysis/`: R code to reproduce tables, figures and analysis
--   `man/`:
--   `R/`:
+-   `analysis/`: R code in .Rmd files to reproduce tables, figures and analysis main analysis and Supplementary material 
+-   `man/`: Documentation of functions and data
+-   `R/`: Necessary for the package
