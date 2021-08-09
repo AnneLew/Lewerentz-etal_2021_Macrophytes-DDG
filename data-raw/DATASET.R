@@ -15,7 +15,7 @@ library(here)
 ## Load data
 setwd("./data-raw/abiotic") #In raw data, all values <BG (below detection limit) were replaced with 0 as I don't know all BG values
 
-chem <- list.files(pattern="*.csv")
+chem <- list.files(pattern="*.csv") #List all files in the folder
 chem.names <- paste("Chem", strtrim(chem, 4), sep="")
 for (i in 1:length(chem.names)) {
   assign(chem.names[i], read.csv(chem[i], skip=8 , dec=",", header=TRUE, sep=";",stringsAsFactors = FALSE, encoding = "UTF-8"))
@@ -23,7 +23,6 @@ for (i in 1:length(chem.names)) {
 
 ## Read in Head of the table
 lakes <- data.frame(categories=character(),data=character())
-
 for (i in chem) {
   dat <- read.csv(i, nrows=6, dec=",", sep=";", skip=0, header=TRUE)[,1:2]
   names(dat) <- names(lakes)
@@ -92,7 +91,7 @@ for (j in chem.names){
 
 dimnames(Chem.Mean.Year)[[1]] <- lake.names
 Chem.Mean.YearDF <- as.data.frame.table(Chem.Mean.Year, responseName = "value")
-Chem.Mean.YearDF <- subset(Chem.Mean.YearDF, !is.na(Chem.Mean.YearDF$value))
+Chem.Mean.YearDF <- subset(Chem.Mean.YearDF, !is.na(Chem.Mean.YearDF$value)) #Exclude NAs
 
 ## Save data
 usethis::use_data(Chem.Mean.YearDF, overwrite = TRUE)
@@ -109,7 +108,7 @@ setwd(here())
 ## Load data
 Makroph <- read.csv("./data-raw/biotic/Makrophyten_WRRL_05-17_nurMakrophytes.csv", header=TRUE, sep=";")
 
-## Filter for unplausible datasets
+## Filter for not plausible datasets
 Makroph <- Makroph %>%
   filter(!(Gewässer=="Chiemsee" & (YEAR==2011))) %>% filter(!(Gewässer=="Chiemsee" & YEAR==2012)) %>% # 1 plot per year -> wrong
   filter(!(Gewässer=="Chiemsee" & (YEAR==2014))) %>% filter(!(Gewässer=="Chiemsee" & (YEAR==2015))) %>%
@@ -119,13 +118,15 @@ Makroph <- Makroph %>%
   filter(!(Gewässer=="Pelhamer See" & (YEAR==2017))) %>%  filter(!(Gewässer=="Weitsee" & (YEAR==2017))) %>%
   distinct()
 
-## Rename values of depth
+## Rename depth
 Makroph$Probestelle <- plyr::revalue(Makroph$Probestelle, c("0-1 m"="0-1", "1-2 m"="1-2", "2-4 m"="2-4",">4 m"="4-x" ))
 
 ## Selection of species that were determined until species level
 Makroph <- Makroph %>%
   filter(str_detect(Taxon, " ")) %>%
   filter(Taxon != "Ranunculus, aquatisch")
+
+usethis::use_data(Makroph, overwrite = TRUE) ##Save
 
 ## To get a dataset with all possible PLOTS
 Makroph_dataset <- Makroph %>% group_by(Gewässer, MST_NR, YEAR) %>%
@@ -143,11 +144,12 @@ Makroph_comm_S2 <- Makroph %>% group_by(Gewässer, MST_NR, DATUM, Probestelle, T
   spread(Taxon, Messwert)%>%
   select_if(~sum(!is.na(.)) > 0)
 
+## Fill up dataset with all possible plots to have also zero values
 Makroph_comm_S <-  right_join(Makroph_comm_S2, Makroph_dataset, by=c("Gewässer", "MST_NR", "YEAR", "Probestelle"))
 Makroph_comm_S$Tiefe <- plyr::revalue(Makroph_comm_S$Probestelle, c("0-1"="-0.5", "1-2"="-1.5", "2-4"="-3","4-x"="-5"))
 Makroph_comm_S<-Makroph_comm_S%>%mutate(Tiefe=as.numeric(Tiefe))
 
 ## Save data
 usethis::use_data(Makroph_comm_S, overwrite = TRUE)
-usethis::use_data(Makroph, overwrite = TRUE)
+
 
