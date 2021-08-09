@@ -1,4 +1,4 @@
-# Depth diversity gradients of macrophytes: shape, drivers and recent shifts -
+# Depth diversity gradients of macrophytes: shape, drivers and recent shifts 
 
 **Research Compendium**
 
@@ -36,8 +36,7 @@ Raw data source of all used data is: Bayerisches Landesamt für Umwelt, www.lfu.
 -   `data-raw/`: Raw datasets for biotic and abiotic data and R code to generate data in preparation files `data/`
 -   `data/`: Cleaned data used for the analysis
 -   `analysis/`: R code in .Rmd files to reproduce tables, figures and analysis of main file and Supplementary material
--   `man/`: Documentation of functions and data
--   `R/`: Necessary for the package
+
 
 ## Reproduce the results
 

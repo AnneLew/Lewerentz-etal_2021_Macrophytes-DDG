@@ -1,15 +1,15 @@
 Package: MacrophytesDDG
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Analysis of the Depth Diversity Gradient of macrophytes
 Version: 0.1.0
 Author: Anne Lewerentz
 Maintainer: The package maintainer <anne.lewerentz@uni-wuerzburg.de>
-Description: Analysis of Depth Diversity Gradients (DDG) for submerged macrophytes in Bavaria. Raw data provided by the LfU Bayern www.lfu.bayern.de/
+Description: Analysis of Depth Diversity Gradients (DDG) for submerged macrophytes in Bavaria. Used for Lewerentz et al 2021. The raw data provided by the LfU Bayern www.lfu.bayern.de/
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-URL: https://github.com/AnneLew/MacrophytesDDG
-BugReports: https://github.com/AnneLew/MacrophytesDDG/issues
+URL: https://github.com/AnneLew/Lewerentz-etal_2021_Macrophytes-DDG
+BugReports: https://github.com/AnneLew/Lewerentz-etal_2021_Macrophytes-DDG/issues
 Depends: 
     R (>= 2.10)
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
