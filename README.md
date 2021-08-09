@@ -1,8 +1,3 @@
----
-editor_options: 
-  markdown: 
-    wrap: 72
----
 
 # Depth diversity gradients of macrophytes: shape, drivers and recent shifts - Research Compendium
 
@@ -50,7 +45,7 @@ To install the package in R follow this code:
     install.packages("devtools")
     library("devtools")
     install_github("https://github.com/AnneLew/Lewerentz-etal_2021_Macrophytes-DDG")
-    library("Lewerentz-etal_2021_Macrophytes-DDG")
+    library("MacrophytesDDG")
 
 
 ### Run R scripts
