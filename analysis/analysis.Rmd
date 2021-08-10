@@ -17,13 +17,10 @@ knitr::opts_chunk$set(echo = T, message=FALSE, warning=FALSE, dpi=300)
 ```
 
 ```{r load-packages, include=FALSE}
+devtools::load_all(path = ".")
 #Load packages
 library(tidyverse)
-library(dplyr)
-library(ggplot2)
-library(magrittr)
 library(knitr)
-library(MacrophytesDDG)
 library(ggpubr)
 library(data.table) 
 library(kableExtra)
