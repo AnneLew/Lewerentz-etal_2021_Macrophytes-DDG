@@ -54,8 +54,8 @@ To reproduce the results run the R scripts in the following order:
 
 | Order | Script Name                          | Description                                                                                                                                                                             |
 |-------|--------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 1     |  `data-raw/DATASET.R`                | Preparation of Community table for submerged macrophytes (Makroph_comm_S; Makroph) and Calculation of mean annual values for selected physical chemical measurements (Chem.Mean.YearDF) |
-| 2     | `data-raw/DATASETPrep.R`             | Calcuation of Biodiversity metrices, Depth diversity gradient matrices MakrophS_ALL; Makroph_Lake_DepthS; Makroph_Depth; Makroph_Lake_ALL; PEAK; Chem_uniform_LOIx; PEAK_Chem_norm      |
+| 1     | `data-raw/DATASET.R`                | Preparation of Community table for submerged macrophytes (Makroph_comm_S; Makroph) and Calculation of mean annual values for selected physical chemical measurements (Chem.Mean.YearDF) |
+| 2     | `data-raw/DATASETPrep.R`             | Calcuation of Biodiversity metrices & Depth diversity gradient matrices; Output datasets: MakrophS_ALL; Makroph_Lake_DepthS; Makroph_Depth; Makroph_Lake_ALL; PEAK; Chem_uniform_LOIx; PEAK_Chem_norm      |
 | 3     | `analysis/analysis.Rmd`              | Reproduces figures, tables and analysis used in main manuscript                                                                                                                         |
 | 4     | `analysis/SupplementaryMaterial.Rmd` | Reproduces figures, tables and analysis shown in SupplementaryMaterial                                                                                                                  |
 

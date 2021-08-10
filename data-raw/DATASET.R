@@ -1,7 +1,6 @@
 # Load Packages  --------
 library(dplyr)
 library(tidyverse)
-library(ggplot2)
 library(lubridate)
 library(stringr)
 library(here)
