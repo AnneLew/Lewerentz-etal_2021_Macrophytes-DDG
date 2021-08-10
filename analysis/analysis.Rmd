@@ -34,7 +34,7 @@ library(ggpmisc)
 library(grid)
 
 ## ggplot theme updates
-#source("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/3_WFD-Project/02_Themes/tidy_white_anne.R")
+source(paste0(here::here(),"/R/theme.R"))
 
 ```
 
