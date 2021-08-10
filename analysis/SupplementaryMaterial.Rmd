@@ -25,12 +25,9 @@ knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
 
 ```{r load-packages, include=FALSE}
 #Load packages
-library(dplyr)
+devtools::load_all(path = ".")
 library(tidyverse)
-library(ggplot2)
-library(magrittr)
 library(knitr)
-library(MacrophytesDDG)
 library(ggpubr)
 library(PerformanceAnalytics)
 library(data.table) 
@@ -45,6 +42,9 @@ library(multcomp) #Herberich Test
 library(multcompView) #Herberich Test
 library(sandwich) #Herberich Test
 library(broom) #Herberich Test
+
+library(ggbiplot)
+library(lubridate)
 
 ## ggplot theme updates
 source("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/3_WFD-Project/02_Themes/tidy_white_anne.R")
@@ -338,7 +338,7 @@ names(PCA)[1]<-"Lake"
 PEAK_PCA<-merge(PCA, PEAK_Chem_norm, by=c("Lake", "YEAR"))
 
 #Plot
-library(ggbiplot)
+
 p1<- ggbiplot(lak.pca, choices = 1:2, obs.scale = 1, var.scale = 1,
               labels=label_lake$Lake, arrow.color = "#FF0000",
               ellipse = TRUE, cicle = TRUE)
@@ -474,8 +474,7 @@ Figure 10: Histograms for Invariability coefficients for single DDG measures (Dm
 ## Temporal trend of gamma richness
 ### General 
 ```{r, fig.height=4, fig.width=8, message=FALSE, echo=FALSE}
-library(ggpmisc)
-library(lubridate)
+
 
 BTD <- PEAK %>% group_by(Lake) %>% filter(n_distinct(YEAR)>3) %>%
     mutate(YEAR = as.numeric(as.character(YEAR)))
@@ -504,7 +503,7 @@ Figure 11: Temporal change of gamma richness from biodiversity time series datas
 ### Individual lakes
 
 ```{r, fig.height=6, fig.width=9, warning=FALSE, echo=FALSE}
-library(ggpmisc)
+
 formula <- y ~ x
 ggplot(BTD, aes(x=factor(YEAR), y=GAMMA, group=factor(Lake))) +
   xlab("")+ylab("GAMMA richness")+ylim(0,40)+
@@ -631,7 +630,7 @@ Figure 13: Temporal change of DDG metrices from biodiversity time series dataset
 
 
 ```{r Temporal plots, fig.height=12, fig.width=10, message=FALSE, warning=FALSE, echo=FALSE}
-library(ggpmisc)
+
 formula <- y ~ x
 T1<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=AlphaPeakDepth, group=factor(Lake)))+
   xlab("")+ylab("AlphaPeakDepth")+ylim(-4,1)+
@@ -672,7 +671,6 @@ Figure 14: Temporal change of DDG metrices from biodiversity time series dataset
 
 
 ```{r Tempral plots, fig.height=12, fig.width=10, message=FALSE, warning=FALSE, echo=FALSE}
-library(ggpmisc)
 formula <- y ~ x
 T1<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=BetaPeakDepth, group=factor(Lake)))+
   xlab("")+ylab("BetaPeakDepth")+ylim(-4,1)+
@@ -710,7 +708,6 @@ ggarrange(T1,T2, nrow=2, labels = c("(a)","(b)"))
 Figure 15: Temporal change of DDG metrices from biodiversity time series dataset for all lakes. Points show annual values and the blue line is a linear model. In panel (a) temporal change of D(beta,max) is shown for all lakes and in panel (b) the corresponding course of R(beta,max) is depicted. 
 
 ```{r, fig.height=12, fig.width=10, message=FALSE, warning=FALSE, echo=FALSE}
-library(ggpmisc)
 formula <- y ~ x
 T1<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=GammaPeakDepth, group=factor(Lake)))+
   xlab("")+ylab("GammaPeakDepth")+ylim(-4,1)+
