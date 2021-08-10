@@ -2,7 +2,7 @@
 title: "Depth diversity gradients of macrophytes: shape, drivers and recent shifts"
 subtitle: 'Supporting information I'
 #author: "Anne Lewerentz, Markus Hoffmann, Juliano S. Cabral"
-date: "22 December 2020"
+date: "15 August 2021"
 output:
   
   word_document: 
@@ -37,7 +37,7 @@ library(ggpmisc)
 library(vegan)
 library(gamm4)
 #library(corrplot)
-
+library(voxel) #GAMM plotting using ggplot2
 library(multcomp) #Herberich Test
 library(multcompView) #Herberich Test
 library(sandwich) #Herberich Test
@@ -51,14 +51,13 @@ library(lubridate)
 source(paste0(here::here(),"/R/theme.R"))
 ```
 
-# General information
-## Lakes
-```{r}
+# General information 
+## Lake morphology
+Table 1: Morphology of selected lakes: Lake surface area [ha] (Area_ha) and depths of deepest point of the lake [m] (maxDepth_m)  
+```{r, echo=FALSE}
 lakes<-unique(Makroph_Lake_DepthS$Lake)
 Morpho<-Morphology[Morphology$Name_Makro_short %in% lakes, ]
-Morpho
-
-#sort(Morpho$maxDepth_m)
+Morpho %>% dplyr::select(Lake, Area_ha, maxDepth_m)
 ```
 
 
@@ -75,7 +74,7 @@ Figure 1: Correlations between diversity metrices (method = pearson). Significan
 
 ## DDG of all field campaigns
 
-```{r, fig.height=3.5, fig.width=9, echo=FALSE}
+```{r, fig.height=3.5, fig.width=9, echo=FALSE, warning = FALSE}
 A1<-ggplot(data=Makroph_Lake_DepthS)+
   geom_line(aes(x=Tiefe, y=ALPHA, group=interaction(Lake, YEAR)),col="grey")+ 
   scale_x_reverse()+
@@ -101,7 +100,7 @@ Figure 2: Depth diversity gradients of macrophytes for alpha (a), beta (b) and g
 ## DDG per lake
 
 
-```{r DDG, fig.height=8, fig.width=9, echo=FALSE}
+```{r DDG, fig.height=8, fig.width=9, echo=FALSE, warning = FALSE}
 ### ALPHA & Peak Plot
 ggplot(data=Makroph_Lake_DepthS, aes(x=(Tiefe), y=ALPHA, col=factor(YEAR),
                                      group=interaction(Lake,YEAR)))+ 
@@ -145,7 +144,7 @@ Figure 3: DDG of submerged macrophytes for alpha (a), beta (b) and gamma richnes
 
 ## Herberich test
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, warning=FALSE}
 Makroph_Lake_DepthS$TiefeFact <- as.factor(Makroph_Lake_DepthS$Tiefe)
 
 # Alpha richness
@@ -153,9 +152,9 @@ aov1 = aov(ALPHA ~ (TiefeFact), data=Makroph_Lake_DepthS) #Fit an Analysis of Va
 Heteroaov1 <- glht(aov1,mcp(TiefeFact="Tukey") , vcov=vcovHC)
 #summary(Heteroaov1)  #Studies sites do not significantly differ in ....
 Herb1<-confint(Heteroaov1) %>% 
-  tidy() %>% 
-  filter(lhs %in% c("-0.5 - -1.5","-1.5 - -3","-3 - -5"))%>% #to select just neighboring groups
-  ggplot(aes(lhs, y=estimate, ymin=conf.low, ymax=conf.high)) +
+  broom::tidy() %>% 
+  filter(contrast %in% c("-0.5 - -1.5","-1.5 - -3","-3 - -5"))%>% #to select just neighboring groups
+  ggplot(aes(x=contrast, y=estimate, ymin=conf.low, ymax=conf.high)) +
     geom_hline(yintercept=0, linetype="11", colour="grey60") +
     geom_errorbar(width=0.1) + 
     geom_point() +
@@ -167,9 +166,9 @@ aov2 = aov(BETA ~ (TiefeFact), data=Makroph_Lake_DepthS) #Fit an Analysis of Var
 Heteroaov2 <- glht(aov2,mcp(TiefeFact="Tukey") , vcov=vcovHC)
 #summary(Heteroaov2)  #Studies sites do not significantly differ in ....
 Herb2<-confint(Heteroaov2) %>% 
-  tidy() %>% 
-  filter(lhs %in% c("-0.5 - -1.5","-1.5 - -3","-3 - -5"))%>% #to select just neighboring groups
-  ggplot(aes(lhs, y=estimate, ymin=conf.low, ymax=conf.high)) +
+  broom::tidy() %>% 
+  filter(contrast %in% c("-0.5 - -1.5","-1.5 - -3","-3 - -5"))%>% #to select just neighboring groups
+  ggplot(aes(x=contrast,  y=estimate, ymin=conf.low, ymax=conf.high)) +
     geom_hline(yintercept=0, linetype="11", colour="grey60") +
     geom_errorbar(width=0.1) + 
     geom_point() +
@@ -181,9 +180,9 @@ aov3 = aov(GAMMA ~ (TiefeFact), data=Makroph_Lake_DepthS) #Fit an Analysis of Va
 Heteroaov3 <- glht(aov3,mcp(TiefeFact="Tukey") , vcov=vcovHC)
 #summary(Heteroaov3)  #Studies sites do not significantly differ in ....
 Herb3<-confint(Heteroaov3) %>% 
-  tidy() %>% 
-  filter(lhs %in% c("-0.5 - -1.5","-1.5 - -3","-3 - -5"))%>% #to select just neighboring groups
-  ggplot(aes(lhs, y=estimate, ymin=conf.low, ymax=conf.high)) +
+  broom::tidy() %>% 
+  filter(contrast %in% c("-0.5 - -1.5","-1.5 - -3","-3 - -5"))%>% #to select just neighboring groups
+  ggplot(aes(x=contrast,  y=estimate, ymin=conf.low, ymax=conf.high)) +
     geom_hline(yintercept=0, linetype="11", colour="grey60") +
     geom_errorbar(width=0.1) + 
     geom_point() +
@@ -198,7 +197,7 @@ Figure 4: Simultaneous tests for linear models with multiple comparisons of mean
 
 
 ## DDG pattern types
-Table 1: Overview about DDG patterns of decreasing curves, hump-shaped curves (different peak depths) and increasing curves. Shows number of field campaigns (lake*year) showing a distinct depth pattern for each richness component.  
+Table 2: Overview about DDG patterns of decreasing curves, hump-shaped curves (different peak depths) and increasing curves. Shows number of field campaigns (lake*year) showing a distinct depth pattern for each richness component.  
 ```{r, echo=FALSE}
 ## Organize DDG into Depth patterns
 #For Alpha Richness peak
@@ -263,7 +262,7 @@ Figure 5: Pearson correlations between DDG measures of different species richnes
 
 
 ## Chi-square test of DDG pattern
-Chi-square is done to see siginificant differences in frequency among the DDG pattern types (Table 1) to see if they are significantly different for each richness component. 
+Chi-square is done to see siginificant differences in frequency among the DDG pattern types (Table 2) to see if they are significantly different for each richness component. 
 ```{r, echo=FALSE}
 #Chi-square test
 chi<-chisq.test(PEAKCLASS, simulate.p.value=TRUE)
@@ -294,7 +293,7 @@ adonis2(scale(PEAK[,c(16,17)])~datasettotsimpl, data=PEAK, by = NULL) #BetaPEAK
 ```{r, fig.width=10, fig.height=8, echo=FALSE}
 PEAK_Chem_norm_BA <- PEAK_Chem_norm %>% ungroup()%>% dplyr::filter(WLF!="NA") %>% filter(SAC!="NA")
 
-values<-PEAK_Chem_norm_BA[c(33,20,22,31,32,29,30,16,19,3:15)]
+values<-PEAK_Chem_norm_BA[c(25,21,23,31,32,29,30,16,19,3:15)]
 colnames(values) <- c("gamma", "D(alp,max)", "R(alp,max)", "D(gam,max)", "R(gam,max)", "D(bet,max)", "R(bet,max)", "Area","WLF","Chloride","Cond","Ntot","NH4N", "NO3N","Osdiss","Ptot","pH","SiO2","Temp","Transp","SAC","Tempsd")
 
 
@@ -308,7 +307,7 @@ Figure 6: Pearson correlation between normalized chemical-physical values & DDG 
 
 ```{r, fig.width=10, fig.height=8, echo=FALSE}
 
-values<-PEAK_Chem_norm[c(33,20,22,31,32,29,30,16,19,3:15)]
+values<-PEAK_Chem_norm[c(25,21,23,31,32,29,30,16,19,3:15)]
 colnames(values) <- c("gamma", "D(alp,max)", "R(alp,max)", "D(gam,max)", "R(gam,max)", "D(bet,max)", "R(bet,max)", "Area","WLF","Chloride","Cond","Ntot","NH4N", "NO3N","Osdiss","Ptot","pH","SiO2","Temp","Transp","SAC","Tempsd")
 
 chart.Correlation(values, 
@@ -320,7 +319,7 @@ Figure 7: Pearson correlation between normalized chemical-physical values & DDG 
 
 ## Principle component analysis  
 
-```{r PCA, fig.height=3.5, fig.width=10, echo=FALSE}
+```{r PCA, fig.height=3.5, fig.width=10, echo=FALSE, warnings=FALSE}
 #environmental & biodiversity dataset 
 label_lake<- PEAK_Chem_norm[complete.cases(PEAK_Chem_norm[,c(3:16,19)]),] 
 lak.pca <- prcomp(na.omit(label_lake[,c(3:16,19)]),center = TRUE, scale. = TRUE)
@@ -354,10 +353,10 @@ figure
 <br/><br/>
 Figure 8: PCA with all environmental parameters of the environemnatal & biodiversity dataset. PCA axes 1-4 cover 0.8086% of variation. Axes 1 & 2 are plotted in panel (a), axes 3 & 4 in panel (b).
 
-## GAMM with selected parameters
+## TODO: Alternative GAMM with selected parameters
 Selected: Ntot
 Nevertheless, we also tested an alternative analysis and made a GAMM directly based on selected, low correlating variables (conductivity, Ntot, Ptot, temperature, transparency, SAC, area and WLF) using the same principle. The results are similar, but the resulting R² are lower (R²=0.697 for Dalpha,max and R²=0.647 for R(alpha,max)) than in the analysis using the PCA as variables
-```{r}
+```{r, warning=FALSE, echo=FALSE}
 gam_AlphaPeakDepth_alternative <- gamm4(AlphaPeakDepth ~ 
                                              s(Conduct)+
                                           #s(Ntot) + 
@@ -370,9 +369,8 @@ gam_AlphaPeakDepth_alternative <- gamm4(AlphaPeakDepth ~
                                random= ~(1|Lake), # package gamm4
                                data=PEAK_Chem_norm_BA)
 summary(gam_AlphaPeakDepth_alternative$gam)
-plot(gam_AlphaPeakDepth_alternative$gam, residuals=TRUE, main = "AlphaPeakDepth",shade = T,seWithMean=T)
-```
-```{r}
+
+
 gam_AlphaPeakRichness_alternative <- gamm4(AlphaPeakRichness ~ 
                                              #s(Conduct)+
                                              #s(Ntot) + 
@@ -385,7 +383,67 @@ gam_AlphaPeakRichness_alternative <- gamm4(AlphaPeakRichness ~
                                random= ~(1|Lake), # package gamm4
                                data=PEAK_Chem_norm_BA)
 summary(gam_AlphaPeakRichness_alternative$gam)
-plot(gam_AlphaPeakRichness_alternative$gam, residuals=TRUE, main = "AlphaPeakRichness",shade = T,seWithMean=T)
+# plot(gam_AlphaPeakRichness_alternative$gam, residuals=TRUE, main = "AlphaPeakRichness",shade = T,seWithMean=T)
+
+
+p1<-plotGAMM(gam_AlphaPeakDepth_alternative, smooth.cov = "Transp")  +
+    geom_point(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakDepth", x = "Transp"), alpha = 0.2) +
+    geom_rug(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakDepth", x = "Transp"), alpha = 0.2) +
+    theme(legend.position="none")+
+    ylab(expression(predicted_D[alpha][max]))+ylim(-3.5,-0.5)+
+    ggtitle("")+ theme(legend.title = element_blank())
+
+p2<-plotGAMM(gam_AlphaPeakDepth_alternative, smooth.cov = "WLF")  +
+    geom_point(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakDepth", x = "WLF"), alpha = 0.2) +
+    geom_rug(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakDepth", x = "WLF"), alpha = 0.2) +
+    theme(legend.position="none")+
+    ylab(expression(predicted_D[alpha][max]))+ylim(-3.5,-0.5)+
+    ggtitle("")+ theme(legend.title = element_blank())
+
+p3<-plotGAMM(gam_AlphaPeakDepth_alternative, smooth.cov = "Conduct")  +
+    geom_point(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakDepth", x = "Conduct"), alpha = 0.2) +
+    geom_rug(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakDepth", x = "Conduct"), alpha = 0.2) +
+    theme(legend.position="none")+
+    ylab(expression(predicted_D[alpha][max]))+ylim(-3.5,-0.5)+
+    ggtitle("")+ theme(legend.title = element_blank())
+
+
+
+p4<-plotGAMM(gam_AlphaPeakRichness_alternative, smooth.cov = "Transp")  +
+    geom_point(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakRichness", x = "Transp"), alpha = 0.2) +
+    geom_rug(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakRichness", x = "Transp"), alpha = 0.2) +
+    theme(legend.position="none")+
+    ylab(expression(predicted_R[alpha][max]))+
+    ggtitle("")+  theme(legend.title = element_blank())
+
+p5<-plotGAMM(gam_AlphaPeakRichness_alternative, smooth.cov = "Area_ha")  +
+    geom_point(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakRichness", x = "Area_ha"), alpha = 0.2) +
+    geom_rug(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakRichness", x = "Area_ha"), alpha = 0.2) +
+    theme(legend.position="none")+
+    ylab(expression(predicted_R[alpha][max]))+
+    ggtitle("")+  theme(legend.title = element_blank())
+
+
+p6<-plotGAMM(gam_AlphaPeakRichness_alternative, smooth.cov = "SAC")  +
+    geom_point(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakRichness", x = "SAC"), alpha = 0.2) +
+    geom_rug(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakRichness", x = "SAC"), alpha = 0.2) +
+    theme(legend.position="none")+
+    ylab(expression(predicted_R[alpha][max]))+
+    ggtitle("")+  theme(legend.title = element_blank())
+
+
+ggarrange(p1,p2,p3,p4,p5,p6, 
+          ncol=3, nrow=2,
+          #heights = c(4,3,3),
+          common.legend = T, legend="top",
+          labels = c("(a)","(b)","(c)", "(d)","(e)","(f)"),
+          #widths = c(1.4,1,1,1),
+          align = "hv"
+          )
+
+```
+```{r}
+
 ```
 
 
@@ -446,7 +504,7 @@ Figure 9: Minimal GAMMs for response variables Gamma richness (a), R(beta,max) (
 
 ## Invariability analysis
 
-```{r, fig.height=4, fig.width=10, echo=FALSE}
+```{r, fig.height=4, fig.width=10, echo=FALSE, warning=FALSE}
 LAKECHANGEInv<-PEAK %>% 
   dplyr::group_by(Lake) %>% #summarize informtion for lakes (over timeseries)
   dplyr::summarise(NYEAR=n_distinct(YEAR),
@@ -473,7 +531,7 @@ Figure 10: Histograms for Invariability coefficients for single DDG measures (Dm
 
 ## Temporal trend of gamma richness
 ### General 
-```{r, fig.height=4, fig.width=8, message=FALSE, echo=FALSE}
+```{r, fig.height=4, fig.width=8, message=FALSE, echo=FALSE, warning=FALSE}
 
 
 BTD <- PEAK %>% group_by(Lake) %>% filter(n_distinct(YEAR)>3) %>%
@@ -526,7 +584,7 @@ Figure 12: Temporal change of gamma richness from biodiversity time series datas
 
 ## Temporal trend of DDG measures 
 ### General
-```{r, fig.height=6, fig.width=5, message=FALSE, echo=FALSE}
+```{r, fig.height=6, fig.width=5, message=FALSE, echo=FALSE, warning=FALSE}
 #formula <- y ~ x
 
 A1<-ggplot(BTD, 

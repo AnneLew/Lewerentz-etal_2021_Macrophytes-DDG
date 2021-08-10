@@ -33,7 +33,7 @@ library(gridExtra)
 library(ggpmisc)
 library(grid)
 
-## ggplot theme updates
+## ggplot theme
 source(paste0(here::here(),"/R/theme.R"))
 
 ```

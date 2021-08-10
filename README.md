@@ -36,6 +36,7 @@ Source of all used raw data is: Bayerisches Landesamt für Umwelt, www.lfu.bayer
 -   `data-raw/`: Raw datasets for biotic and abiotic data and R code to generate data in preparation files `data/`
 -   `data/`: Cleaned data used for the analysis
 -   `analysis/`: R code in .Rmd files to reproduce tables, figures and analysis of main file and Supplementary material
+-   `R/`: ggplot theme to reproduce layout of plots
 
 
 ## How to reproduce the results
