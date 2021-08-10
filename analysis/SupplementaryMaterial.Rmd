@@ -168,7 +168,7 @@ aov2 = aov(BETA ~ (TiefeFact), data=Makroph_Lake_DepthS) #Fit an Analysis of Var
 Heteroaov2 <- glht(aov2,mcp(TiefeFact="Tukey") , vcov=vcovHC)
 #summary(Heteroaov2)  #Studies sites do not significantly differ in ....
 Herb2<-confint(Heteroaov2) %>% 
-  tidy %>% 
+  tidy() %>% 
   filter(lhs %in% c("-0.5 - -1.5","-1.5 - -3","-3 - -5"))%>% #to select just neighboring groups
   ggplot(aes(lhs, y=estimate, ymin=conf.low, ymax=conf.high)) +
     geom_hline(yintercept=0, linetype="11", colour="grey60") +
@@ -182,7 +182,7 @@ aov3 = aov(GAMMA ~ (TiefeFact), data=Makroph_Lake_DepthS) #Fit an Analysis of Va
 Heteroaov3 <- glht(aov3,mcp(TiefeFact="Tukey") , vcov=vcovHC)
 #summary(Heteroaov3)  #Studies sites do not significantly differ in ....
 Herb3<-confint(Heteroaov3) %>% 
-  tidy %>% 
+  tidy() %>% 
   filter(lhs %in% c("-0.5 - -1.5","-1.5 - -3","-3 - -5"))%>% #to select just neighboring groups
   ggplot(aes(lhs, y=estimate, ymin=conf.low, ymax=conf.high)) +
     geom_hline(yintercept=0, linetype="11", colour="grey60") +
@@ -751,9 +751,5 @@ Figure 16: Temporal change of DDG metrices from biodiversity time series dataset
 # Literature
 Herberich, E. et al. 2010. A Robust Procedure for Comparing Multiple Means under Heteroscedasticity in Unbalanced Designs (F Rapallo, Ed.). - PLoS ONE 5: e9788.
 
-# Session info
-```{r}
-Sys.time()
-sessionInfo()
-```
+
 
