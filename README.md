@@ -44,9 +44,8 @@ Source of all used raw data is: Bayerisches Landesamt für Umwelt, www.lfu.bayer
 
 To install the package in R follow this code:
 
-    install.packages("devtools")
-    library("devtools")
-    install_github("https://github.com/AnneLew/Lewerentz-etal_2021_Macrophytes-DDG")
+    #install.packages("devtools") # install devtools if you don't have it already
+    devtools::install_github("https://github.com/AnneLew/Lewerentz-etal_2021_Macrophytes-DDG")
     library("MacrophytesDDG")
 
 ### Run R scripts
