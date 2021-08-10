@@ -25,12 +25,9 @@ knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
 
 ```{r load-packages, include=FALSE}
 #Load packages
-library(dplyr)
+devtools::load_all(path = ".")
 library(tidyverse)
-library(ggplot2)
-library(magrittr)
 library(knitr)
-library(MacrophytesDDG)
 library(ggpubr)
 library(PerformanceAnalytics)
 library(data.table) 
@@ -46,8 +43,12 @@ library(multcompView) #Herberich Test
 library(sandwich) #Herberich Test
 library(broom) #Herberich Test
 
+# install_github("vqv/ggbiplot")
+library(ggbiplot)
+library(lubridate)
+
 ## ggplot theme updates
-source("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/3_WFD-Project/02_Themes/tidy_white_anne.R")
+#source("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/3_WFD-Project/02_Themes/tidy_white_anne.R")
 
 ```
 
@@ -153,7 +154,7 @@ aov1 = aov(ALPHA ~ (TiefeFact), data=Makroph_Lake_DepthS) #Fit an Analysis of Va
 Heteroaov1 <- glht(aov1,mcp(TiefeFact="Tukey") , vcov=vcovHC)
 #summary(Heteroaov1)  #Studies sites do not significantly differ in ....
 Herb1<-confint(Heteroaov1) %>% 
-  tidy %>% 
+  tidy() %>% 
   filter(lhs %in% c("-0.5 - -1.5","-1.5 - -3","-3 - -5"))%>% #to select just neighboring groups
   ggplot(aes(lhs, y=estimate, ymin=conf.low, ymax=conf.high)) +
     geom_hline(yintercept=0, linetype="11", colour="grey60") +
@@ -167,7 +168,7 @@ aov2 = aov(BETA ~ (TiefeFact), data=Makroph_Lake_DepthS) #Fit an Analysis of Var
 Heteroaov2 <- glht(aov2,mcp(TiefeFact="Tukey") , vcov=vcovHC)
 #summary(Heteroaov2)  #Studies sites do not significantly differ in ....
 Herb2<-confint(Heteroaov2) %>% 
-  tidy %>% 
+  tidy() %>% 
   filter(lhs %in% c("-0.5 - -1.5","-1.5 - -3","-3 - -5"))%>% #to select just neighboring groups
   ggplot(aes(lhs, y=estimate, ymin=conf.low, ymax=conf.high)) +
     geom_hline(yintercept=0, linetype="11", colour="grey60") +
@@ -181,7 +182,7 @@ aov3 = aov(GAMMA ~ (TiefeFact), data=Makroph_Lake_DepthS) #Fit an Analysis of Va
 Heteroaov3 <- glht(aov3,mcp(TiefeFact="Tukey") , vcov=vcovHC)
 #summary(Heteroaov3)  #Studies sites do not significantly differ in ....
 Herb3<-confint(Heteroaov3) %>% 
-  tidy %>% 
+  tidy() %>% 
   filter(lhs %in% c("-0.5 - -1.5","-1.5 - -3","-3 - -5"))%>% #to select just neighboring groups
   ggplot(aes(lhs, y=estimate, ymin=conf.low, ymax=conf.high)) +
     geom_hline(yintercept=0, linetype="11", colour="grey60") +
@@ -338,7 +339,7 @@ names(PCA)[1]<-"Lake"
 PEAK_PCA<-merge(PCA, PEAK_Chem_norm, by=c("Lake", "YEAR"))
 
 #Plot
-library(ggbiplot)
+
 p1<- ggbiplot(lak.pca, choices = 1:2, obs.scale = 1, var.scale = 1,
               labels=label_lake$Lake, arrow.color = "#FF0000",
               ellipse = TRUE, cicle = TRUE)
@@ -474,8 +475,7 @@ Figure 10: Histograms for Invariability coefficients for single DDG measures (Dm
 ## Temporal trend of gamma richness
 ### General 
 ```{r, fig.height=4, fig.width=8, message=FALSE, echo=FALSE}
-library(ggpmisc)
-library(lubridate)
+
 
 BTD <- PEAK %>% group_by(Lake) %>% filter(n_distinct(YEAR)>3) %>%
     mutate(YEAR = as.numeric(as.character(YEAR)))
@@ -504,7 +504,7 @@ Figure 11: Temporal change of gamma richness from biodiversity time series datas
 ### Individual lakes
 
 ```{r, fig.height=6, fig.width=9, warning=FALSE, echo=FALSE}
-library(ggpmisc)
+
 formula <- y ~ x
 ggplot(BTD, aes(x=factor(YEAR), y=GAMMA, group=factor(Lake))) +
   xlab("")+ylab("GAMMA richness")+ylim(0,40)+
@@ -631,7 +631,7 @@ Figure 13: Temporal change of DDG metrices from biodiversity time series dataset
 
 
 ```{r Temporal plots, fig.height=12, fig.width=10, message=FALSE, warning=FALSE, echo=FALSE}
-library(ggpmisc)
+
 formula <- y ~ x
 T1<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=AlphaPeakDepth, group=factor(Lake)))+
   xlab("")+ylab("AlphaPeakDepth")+ylim(-4,1)+
@@ -672,7 +672,6 @@ Figure 14: Temporal change of DDG metrices from biodiversity time series dataset
 
 
 ```{r Tempral plots, fig.height=12, fig.width=10, message=FALSE, warning=FALSE, echo=FALSE}
-library(ggpmisc)
 formula <- y ~ x
 T1<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=BetaPeakDepth, group=factor(Lake)))+
   xlab("")+ylab("BetaPeakDepth")+ylim(-4,1)+
@@ -710,7 +709,6 @@ ggarrange(T1,T2, nrow=2, labels = c("(a)","(b)"))
 Figure 15: Temporal change of DDG metrices from biodiversity time series dataset for all lakes. Points show annual values and the blue line is a linear model. In panel (a) temporal change of D(beta,max) is shown for all lakes and in panel (b) the corresponding course of R(beta,max) is depicted. 
 
 ```{r, fig.height=12, fig.width=10, message=FALSE, warning=FALSE, echo=FALSE}
-library(ggpmisc)
 formula <- y ~ x
 T1<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR), y=GammaPeakDepth, group=factor(Lake)))+
   xlab("")+ylab("GammaPeakDepth")+ylim(-4,1)+
@@ -753,9 +751,5 @@ Figure 16: Temporal change of DDG metrices from biodiversity time series dataset
 # Literature
 Herberich, E. et al. 2010. A Robust Procedure for Comparing Multiple Means under Heteroscedasticity in Unbalanced Designs (F Rapallo, Ed.). - PLoS ONE 5: e9788.
 
-# Session info
-```{r}
-Sys.time()
-sessionInfo()
-```
+
 
