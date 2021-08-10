@@ -28,8 +28,13 @@ library(knitr)
 library(vegan)
 library(gamm4)
 
+library(voxel)
+library(gridExtra)
+library(ggpmisc)
+library(grid)
+
 ## ggplot theme updates
-source("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/3_WFD-Project/02_Themes/tidy_white_anne.R")
+#source("C:/Users/anl85ck/Desktop/PhD/5_Macrophytes-Bavaria/3_WFD-Project/02_Themes/tidy_white_anne.R")
 
 ```
 
@@ -133,7 +138,7 @@ sd(Makroph_Lake_ALL$GAMMA)
 ## Depth diversity gradients
 
 ```{r figure2,fig.height=7, fig.width=8}
-library(ggpmisc)
+
 A1<-ggplot(data=Makroph_Depth)+
   geom_ribbon(aes(x = Tiefe, ymax =mAlpha+sdAlpha, ymin =mAlpha-sdAlpha), alpha = 0.6, fill = "grey")+
   geom_line(aes(x=(Tiefe), y=mAlpha), size=1)+ 
@@ -283,11 +288,10 @@ gam_AlphaPeakRichness <- gamm4(AlphaPeakRichness ~ s(PC1),
                                data=PEAK_PCA)
 summary(gam_AlphaPeakRichness$gam)
 
-library(voxel)
-library(gridExtra)
+
 vars <- c("PC2", "PC4","PC3","PC1")
 
-library(grid)
+
 
 grob2 <- grobTree(textGrob("*** 36.6% dc", x=0.1,  y=0.9, hjust=0,
   gp=gpar(col="grey12", fontsize=13, fontface="italic")))
