@@ -353,98 +353,15 @@ figure
 <br/><br/>
 Figure 8: PCA with all environmental parameters of the environemnatal & biodiversity dataset. PCA axes 1-4 cover 0.8086% of variation. Axes 1 & 2 are plotted in panel (a), axes 3 & 4 in panel (b).
 
-## TODO: Alternative GAMM with selected parameters
-Selected: Ntot
-Nevertheless, we also tested an alternative analysis and made a GAMM directly based on selected, low correlating variables (conductivity, Ntot, Ptot, temperature, transparency, SAC, area and WLF) using the same principle. The results are similar, but the resulting R² are lower (R²=0.697 for Dalpha,max and R²=0.647 for R(alpha,max)) than in the analysis using the PCA as variables
-```{r, warning=FALSE, echo=FALSE}
-gam_AlphaPeakDepth_alternative <- gamm4(AlphaPeakDepth ~ 
-                                             s(Conduct)+
-                                          #s(Ntot) + 
-                                          #s(Ptot)+
-                                          #s(Temp)+
-                                          s(Transp)+ 
-                                          #s(SAC)+
-                                          #s(Area_ha)+
-                                          s(WLF),
-                               random= ~(1|Lake), # package gamm4
-                               data=PEAK_Chem_norm_BA)
-summary(gam_AlphaPeakDepth_alternative$gam)
-
-
-gam_AlphaPeakRichness_alternative <- gamm4(AlphaPeakRichness ~ 
-                                             #s(Conduct)+
-                                             #s(Ntot) + 
-                                             #s(Ptot)+
-                                             #s(Temp)+
-                                             s(Transp)+ 
-                                             s(SAC)+
-                                             s(Area_ha),#+
-                                             #s(WLF),
-                               random= ~(1|Lake), # package gamm4
-                               data=PEAK_Chem_norm_BA)
-summary(gam_AlphaPeakRichness_alternative$gam)
-# plot(gam_AlphaPeakRichness_alternative$gam, residuals=TRUE, main = "AlphaPeakRichness",shade = T,seWithMean=T)
-
-
-p1<-plotGAMM(gam_AlphaPeakDepth_alternative, smooth.cov = "Transp")  +
-    geom_point(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakDepth", x = "Transp"), alpha = 0.2) +
-    geom_rug(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakDepth", x = "Transp"), alpha = 0.2) +
-    theme(legend.position="none")+
-    ylab(expression(predicted_D[alpha][max]))+ylim(-3.5,-0.5)+
-    ggtitle("")+ theme(legend.title = element_blank())
-
-p2<-plotGAMM(gam_AlphaPeakDepth_alternative, smooth.cov = "WLF")  +
-    geom_point(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakDepth", x = "WLF"), alpha = 0.2) +
-    geom_rug(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakDepth", x = "WLF"), alpha = 0.2) +
-    theme(legend.position="none")+
-    ylab(expression(predicted_D[alpha][max]))+ylim(-3.5,-0.5)+
-    ggtitle("")+ theme(legend.title = element_blank())
-
-p3<-plotGAMM(gam_AlphaPeakDepth_alternative, smooth.cov = "Conduct")  +
-    geom_point(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakDepth", x = "Conduct"), alpha = 0.2) +
-    geom_rug(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakDepth", x = "Conduct"), alpha = 0.2) +
-    theme(legend.position="none")+
-    ylab(expression(predicted_D[alpha][max]))+ylim(-3.5,-0.5)+
-    ggtitle("")+ theme(legend.title = element_blank())
 
 
 
-p4<-plotGAMM(gam_AlphaPeakRichness_alternative, smooth.cov = "Transp")  +
-    geom_point(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakRichness", x = "Transp"), alpha = 0.2) +
-    geom_rug(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakRichness", x = "Transp"), alpha = 0.2) +
-    theme(legend.position="none")+
-    ylab(expression(predicted_R[alpha][max]))+
-    ggtitle("")+  theme(legend.title = element_blank())
-
-p5<-plotGAMM(gam_AlphaPeakRichness_alternative, smooth.cov = "Area_ha")  +
-    geom_point(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakRichness", x = "Area_ha"), alpha = 0.2) +
-    geom_rug(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakRichness", x = "Area_ha"), alpha = 0.2) +
-    theme(legend.position="none")+
-    ylab(expression(predicted_R[alpha][max]))+
-    ggtitle("")+  theme(legend.title = element_blank())
 
 
-p6<-plotGAMM(gam_AlphaPeakRichness_alternative, smooth.cov = "SAC")  +
-    geom_point(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakRichness", x = "SAC"), alpha = 0.2) +
-    geom_rug(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakRichness", x = "SAC"), alpha = 0.2) +
-    theme(legend.position="none")+
-    ylab(expression(predicted_R[alpha][max]))+
-    ggtitle("")+  theme(legend.title = element_blank())
 
 
-ggarrange(p1,p2,p3,p4,p5,p6, 
-          ncol=3, nrow=2,
-          #heights = c(4,3,3),
-          common.legend = T, legend="top",
-          labels = c("(a)","(b)","(c)", "(d)","(e)","(f)"),
-          #widths = c(1.4,1,1,1),
-          align = "hv"
-          )
 
-```
-```{r}
 
-```
 
 
 ## GAMM for gamma richness & beta and gamma DDG measures
@@ -500,6 +417,94 @@ text(-3.5, 5.0, "(c)", cex=2)
 Figure 9: Minimal GAMMs for response variables Gamma richness (a), R(beta,max) (b) and R(gamma, max) (c). Low r_square (adj) were found: 0.213 (a); 0.0124 (b); 0.265 (c).
 
 
+
+
+## Alternative GAMM with parameters selected on expert knowledge
+
+
+```{r, warning=FALSE, echo=FALSE}
+
+gam_AlphaPeakDepth_alternative <- gamm4(AlphaPeakDepth ~ 
+                                             s(Conduct)+
+                                          #s(Ntot) + 
+                                          #s(Ptot)+
+                                          #s(Temp)+
+                                          s(Transp)+ 
+                                          #s(Area_ha)+
+                                          s(WLF),
+                               random= ~(1|Lake), # package gamm4
+                               data=PEAK_Chem_norm_BA)
+#summary(gam_AlphaPeakDepth_alternative$gam)
+
+
+
+gam_AlphaPeakRichness_alternative <- gamm4(AlphaPeakRichness ~ 
+                                             #s(Conduct)+
+                                             #s(Ntot) + 
+                                             #s(Ptot)+
+                                             #s(Temp)+
+                                             s(Transp)+ 
+                                             s(Area_ha),#+
+                                             #s(WLF),
+                               random= ~(1|Lake), # package gamm4
+                               data=PEAK_Chem_norm_BA)
+#summary(gam_AlphaPeakRichness_alternative$gam)
+# plot(gam_AlphaPeakRichness_alternative$gam, residuals=TRUE, main = "AlphaPeakRichness",shade = T,seWithMean=T)
+
+
+p1<-plotGAMM(gam_AlphaPeakDepth_alternative, smooth.cov = "Transp")  +
+    geom_point(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakDepth", x = "Transp"), alpha = 0.2) +
+    geom_rug(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakDepth", x = "Transp"), alpha = 0.2) +
+    theme(legend.position="none")+
+    ylab(expression(predicted_D[alpha][max]))+ylim(-3.5,-0.5)+
+    ggtitle("")+ theme(legend.title = element_blank())
+
+p2<-plotGAMM(gam_AlphaPeakDepth_alternative, smooth.cov = "WLF")  +
+    geom_point(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakDepth", x = "WLF"), alpha = 0.2) +
+    geom_rug(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakDepth", x = "WLF"), alpha = 0.2) +
+    theme(legend.position="none")+
+    ylab(expression(predicted_D[alpha][max]))+ylim(-3.5,-0.5)+
+    ggtitle("")+ theme(legend.title = element_blank())
+
+p3<-plotGAMM(gam_AlphaPeakDepth_alternative, smooth.cov = "Conduct")  +
+    geom_point(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakDepth", x = "Conduct"), alpha = 0.2) +
+    geom_rug(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakDepth", x = "Conduct"), alpha = 0.2) +
+    theme(legend.position="none")+
+    ylab(expression(predicted_D[alpha][max]))+ylim(-3.5,-0.5)+
+    ggtitle("")+ theme(legend.title = element_blank())
+
+
+
+p4<-plotGAMM(gam_AlphaPeakRichness_alternative, smooth.cov = "Transp")  +
+    geom_point(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakRichness", x = "Transp"), alpha = 0.2) +
+    geom_rug(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakRichness", x = "Transp"), alpha = 0.2) +
+    theme(legend.position="none")+
+    ylab(expression(predicted_R[alpha][max]))+
+    ggtitle("")+  theme(legend.title = element_blank())
+
+p5<-plotGAMM(gam_AlphaPeakRichness_alternative, smooth.cov = "Area_ha")  +
+    geom_point(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakRichness", x = "Area_ha"), alpha = 0.2) +
+    geom_rug(data = PEAK_Chem_norm_BA, aes_string(y = "AlphaPeakRichness", x = "Area_ha"), alpha = 0.2) +
+    theme(legend.position="none")+
+    ylab(expression(predicted_R[alpha][max]))+
+    ggtitle("")+  theme(legend.title = element_blank())
+
+
+
+
+
+ggarrange(p1,p2,p3,p4,p5, 
+          ncol=3, nrow=2,
+          #heights = c(4,3,3),
+          common.legend = T, legend="top",
+          labels = c("(a)","(b)","(c)", "(d)","(e)"),
+          #widths = c(1.4,1,1,1),
+          align = "hv"
+          )
+
+```
+Figure 10: Alternative GAMMs without PCA for selected parameters. The selection was based on expert knowledge on highly likly influencing factors and excluding high correlations (see Figure 6 and 7). We selected Conductivity (representative for Chloride), Ntot (representative for NH4 and NO3), Ptot, Temperature (representative for Tempsd), Transp (representative for SAC), Area and WLF. pH, O2diss & SiO2 were excluded. The resulting GAMM for D(alpha,max) 0.697 (a-c) has a R² lower (R²=0.697) than in the analysis using the PCA axes as variables (R²=0.73). GAMM for R(alpha,max) (d-f) shows also a slightly lower R² (R²=0.432) than in the analysis using the PCA axes as variables (R²=0.44). 
+
 # Depth diversity gradients of macrophytes: recent shifts
 
 ## Invariability analysis
@@ -527,7 +532,7 @@ ggplot(LAKECHANGEInv %>% gather(Type, "Inv", 3:9)) +
   xlab("Invariability coefficient")
 ```
 <br/><br/>
-Figure 10: Histograms for Invariability coefficients for single DDG measures (Dmax and Rmax of alpha, beta and gamma richness) and gamma richness for the biodiversity timeseries dataset. High invariability means a high stability within the timeseries. 
+Figure 11: Histograms for Invariability coefficients for single DDG measures (Dmax and Rmax of alpha, beta and gamma richness) and gamma richness for the biodiversity timeseries dataset. High invariability means a high stability within the timeseries. 
 
 ## Temporal trend of gamma richness
 ### General 
@@ -556,7 +561,7 @@ ggplot(data=BTD,
     scale_x_continuous(breaks=c(2007,2010,2013,2016))
 ```
 <br/><br/>
-Figure 11: Temporal change of gamma richness from biodiversity time series dataset for all lakes together. Points show individual values and the blue line is a linear model. 
+Figure 12: Temporal change of gamma richness from biodiversity time series dataset for all lakes together. Points show individual values and the blue line is a linear model. 
 
 ### Individual lakes
 
@@ -580,7 +585,7 @@ ggplot(BTD, aes(x=factor(YEAR), y=GAMMA, group=factor(Lake))) +
                vstep = 0.0)
 ```
 <br/><br/>
-Figure 12: Temporal change of gamma richness from biodiversity time series dataset for all individual lakes. Points show single values and the blue line is a linear model per lake. 
+Figure 13: Temporal change of gamma richness from biodiversity time series dataset for all individual lakes. Points show single values and the blue line is a linear model per lake. 
 
 ## Temporal trend of DDG measures 
 ### General
@@ -682,7 +687,7 @@ C2<-ggplot(BTD,
 ggarrange(A1,A2,B1,B2,C1,C2, ncol=2, nrow = 3,labels=c("(a)","(b)","(c)","(d)","(e)","(f)"))
 ```
 <br/><br/>
-Figure 13: Temporal change of DDG metrices from biodiversity time series dataset for all lakes at once. Points show single values and the blue line is a linear model. In panel (a,c,e) temporal change of D(max) is shown and in panel (b,d,f) the corresponding course of R(max) is depicted.
+Figure 14: Temporal change of DDG metrices from biodiversity time series dataset for all lakes at once. Points show single values and the blue line is a linear model. In panel (a,c,e) temporal change of D(max) is shown and in panel (b,d,f) the corresponding course of R(max) is depicted.
 
 ### Individual lakes
 
@@ -723,7 +728,7 @@ T2<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR
 ggarrange(T1,T2, nrow=2, labels = c("(a)","(b)"))
 ```
 <br/><br/>
-Figure 14: Temporal change of DDG metrices from biodiversity time series dataset for all lakes. Points show annual values and the blue line is a linear model. In panel (a) temporal change of D(alpha,max) is shown for all lakes and in panel (b) the corresponding course of R(alpha,max) is depicted. 
+Figure 15: Temporal change of DDG metrices from biodiversity time series dataset for all lakes. Points show annual values and the blue line is a linear model. In panel (a) temporal change of D(alpha,max) is shown for all lakes and in panel (b) the corresponding course of R(alpha,max) is depicted. 
 
 
 
@@ -763,7 +768,7 @@ T2<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR
 ggarrange(T1,T2, nrow=2, labels = c("(a)","(b)"))
 ```
 <br/><br/>
-Figure 15: Temporal change of DDG metrices from biodiversity time series dataset for all lakes. Points show annual values and the blue line is a linear model. In panel (a) temporal change of D(beta,max) is shown for all lakes and in panel (b) the corresponding course of R(beta,max) is depicted. 
+Figure 16: Temporal change of DDG metrices from biodiversity time series dataset for all lakes. Points show annual values and the blue line is a linear model. In panel (a) temporal change of D(beta,max) is shown for all lakes and in panel (b) the corresponding course of R(beta,max) is depicted. 
 
 ```{r, fig.height=12, fig.width=10, message=FALSE, warning=FALSE, echo=FALSE}
 formula <- y ~ x
@@ -800,7 +805,7 @@ T2<-ggplot(PEAK%>%group_by(Lake)%>%filter(n_distinct(YEAR)>3), aes(x=factor(YEAR
 ggarrange(T1,T2, nrow=2, labels = c("(a)","(b)"))
 ```
 <br/><br/>
-Figure 16: Temporal change of DDG metrices from biodiversity time series dataset for all lakes. Points show annual values and the blue line is a linear model. In panel (a) temporal change of D(gamma,max) is shown for all lakes and in panel (b) the corresponding course of R(gamma,max) is depicted. 
+Figure 17: Temporal change of DDG metrices from biodiversity time series dataset for all lakes. Points show annual values and the blue line is a linear model. In panel (a) temporal change of D(gamma,max) is shown for all lakes and in panel (b) the corresponding course of R(gamma,max) is depicted. 
 
 
 
