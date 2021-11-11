@@ -20,11 +20,12 @@ Anne Lewerentz¹\*, Markus Hoffmann², Juliano Sarmento Cabral¹
 
 *Release 0.9* corresponds to a *Preprint*:
 
--   Anne Lewerentz, Markus Hoffmann, Juliano Sarmento Cabral. Depth diversity gradients of macrophytes: shape, drivers and recent shifts. Authorea. April 20, 2021. [DOI: 10.22541/au.161893346.60777770/v1](https://www.authorea.com/users/409017/articles/518802-depth-diversity-gradients-of-macrophytes-shape-drivers-and-recent-shifts?commit=50fa6e716400b5957bbe4ecfedd786b3ef8255de)
+-   Lewerentz, A., Hoffmann, M., Sarmento Cabral, J. (2021). Depth diversity gradients of macrophytes: shape, drivers and recent shifts. Authorea.  [DOI: 10.22541/au.161893346.60777770/v1](https://www.authorea.com/users/409017/articles/518802-depth-diversity-gradients-of-macrophytes-shape-drivers-and-recent-shifts?commit=50fa6e716400b5957bbe4ecfedd786b3ef8255de)
 
-*Release 1.0* will correspond to the final Version:
+*Release 1.0* corresponds to the following publication:
 
--   *Final publication will be added as soon as it is published*
+-   Lewerentz, A., Hoffmann, M., & Sarmento Cabral, J. (2021). Depth diversity gradients of macrophytes: Shape, drivers, and recent shifts. Ecology and Evolution, ece3.8089. [https://doi.org/10.1002/ece3.8089](https://onlinelibrary.wiley.com/doi/10.1002/ece3.8089)
+
 
 ## Data source
 
